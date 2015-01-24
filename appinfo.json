@@ -1,0 +1,40 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        "configurable"
+    ],
+    "companyName": "aclymer",
+    "longName": "Drug Wars",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/brains_watch_background.png",
+                "name": "IMAGE_BACKGROUND_BRAINS",
+                "type": "png"
+            },
+            {
+                "file": "images/menu_icon_binary_watch.png",
+                "name": "IMAGE_MENU_ICON_BINARY_WATCH",
+                "type": "png"
+            },
+            {
+                "file": "images/menu_icon_sector_watch.png",
+                "name": "IMAGE_MENU_ICON_SECTOR_WATCH",
+                "type": "png"
+            },
+            {
+                "file": "images/menu_icon_big_watch.png",
+                "name": "IMAGE_MENU_ICON_BIG_WATCH",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "Drug Wars",
+    "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
