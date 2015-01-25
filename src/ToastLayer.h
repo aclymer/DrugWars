@@ -56,5 +56,7 @@ void toast_layer_hide(ToastLayer *);
  */
 bool toast_layer_is_visible(ToastLayer *);
 
+void toast_layer_show_interface(ToastLayer *, char *, int, int);
+
 #endif
 

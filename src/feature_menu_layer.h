@@ -149,7 +149,7 @@ const void* prev_menu_items[3][8] = {
 typedef struct {
 	int Price;								// C , H , A , W , S , L
 	int Quantity;							// M , N , O , P , Q , R
-	char *Name;
+	const char *Name;
 } DRUGS;
 
 typedef struct {
@@ -184,7 +184,6 @@ void Subway(MenuIndex *);
 void Event_Generator(MenuIndex *);
 	
 // Pebble wrapper conditional functions
-int Menu(char* Title, int num, char* m_Item1, char* m_Item2, ... );
 void Num_Input(char *, int, int, int, MenuIndex *);
 
 char			*string;
