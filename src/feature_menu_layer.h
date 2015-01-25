@@ -177,7 +177,6 @@ int Day;										//		B = 1;
 bool TrenchcoatAdd(ushort, ITEMS, MenuIndex *);
 void BuyDrugs(int32_t, MenuIndex *);
 void SellDrugs(int32_t, MenuIndex *);
-void Chased_Menu(MenuIndex *);
 void Being_Shot(MenuIndex *);
 void Cop_187(MenuIndex *);
 void Game_Over(void);
@@ -189,4 +188,3 @@ int Menu(char* Title, int num, char* m_Item1, char* m_Item2, ... );
 void Num_Input(char *, int, int, int, MenuIndex *);
 
 char			*string;
-char 			*format;

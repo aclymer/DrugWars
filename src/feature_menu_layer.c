@@ -11,8 +11,6 @@ ToastLayer		*message_layer;
 
 void Event_Generator(MenuIndex *cell_index)
 {
-	psleep(SHORT_MESSAGE_DELAY);
-	
 	Trenchcoat.Drug[COCAINE].Price 		= (rand() % 12001	+ 16000	)				;
 	Trenchcoat.Drug[HEROINE].Price 		= (rand() % 7001	+ 5000	)				;
 	Trenchcoat.Drug[ACID].Price 			= (rand() % 35		+ 10		) * 100	;
@@ -77,7 +75,7 @@ void Event_Generator(MenuIndex *cell_index)
 			if (Money.Cash >= 500 && Trenchcoat.Freespace >= 5)
 			{
 				string = malloc((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char));
-				string = "WILL YOU BUY A ";
+				snprintf(string, ((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char)), "WILL YOU BUY A ");
 				switch(rand() % 3)
 				{
 					case 0:		strcat(string, "BARRETTA"); 							break;
@@ -85,8 +83,9 @@ void Event_Generator(MenuIndex *cell_index)
 					case 2:		strcat(string, ".44 MAGNUM");							break;
 				}
 				strcat(string, " FOR $400?");
-				X = 1;
+				toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 				free(string);
+				X = 1;
 				if (X == 1)
 				{
 					Trenchcoat.Guns			++;//I = I + 1;
@@ -128,9 +127,10 @@ void Event_Generator(MenuIndex *cell_index)
 			if (Trenchcoat.Freespace >= 8)
 			{
 				X = rand() % 7 + 1; // [1-6]
+				string = malloc((strlen("YOU FOUND %i UNITS OF %s ON A DEAD DUDE IN THE SUBWAY!!!") + strlen(Trenchcoat.Drug[X].Name) + 1) * sizeof(char));
 				snprintf(string,
 								 (strlen("YOU FOUND %i UNITS OF %s ON A DEAD DUDE IN THE SUBWAY!!!") + strlen(Trenchcoat.Drug[X].Name) + 1) * sizeof(char),
-								 format,
+								 "YOU FOUND %i UNITS OF %s ON A DEAD DUDE IN THE SUBWAY!!!",
 								 rand() % 8 + 1,
 								 Trenchcoat.Drug[X].Name
 								);				
@@ -158,7 +158,7 @@ void Event_Generator(MenuIndex *cell_index)
 				string = malloc((strlen("OFFICER HARDASS AND %i OF HIS DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char));
 				snprintf(string, (strlen("OFFICER HARDASS AND %i OF HIS DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char), "OFFICER HARDASS AND %i OF HIS DEPUTIES ARE AFTER YOU!", Cops);
 				toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, 0);
-				
+				free(string);
 				menu_number = 8;
 				menu_layer_reload_data(home_menu_layer);
 			}	
@@ -166,78 +166,6 @@ void Event_Generator(MenuIndex *cell_index)
 	}
 	
 	return;
-}
-
-void Chased_Menu(MenuIndex *cell_index)
-{
-	int select;
-	do {
-		select = Menu("BEING CHASED!!", 5, "VIEW GUNS", "VIEW DAMMAGE", "NUMBER OF PIGS", "RUN", "FIGHT");
-		switch(select)
-		{
-			case 1:
-			format = "NUMBER OF GUNS\nYOU HAVE: %i";
-			snprintf(string, (strlen(format) + 1) * sizeof(char), format, Trenchcoat.Guns);
-			toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			break;
-
-			case 2:
-			format = "(50 DAMMAGE AND YOU DIE!)\n\nYOUR DAMMAGE:\n %u";
-			snprintf(string, ((strlen(format) + 1) * sizeof(char)), format, Damage);
-			toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			break;
-
-			case 3:
-			Dice++;
-			format = "THERE ARE:\n %i \nPIGS STILL\nCHASING YOU!";
-			snprintf(string, (strlen(format) + 1) * sizeof(char), format, Cops);
-				toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			Dice--;
-			break;
-
-			case 4:
-			toast_layer_show(message_layer, "\n\n\nRUNNING...\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			srand(time(NULL));
-			X = rand() % 2;
-			if (X == 0)
-			{
-				toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				if (Day == 31)
-					return; 													// goto Home();
-				else
-				{
-					Event_Generator(cell_index);
-					return;
-				}
-			}
-			else
-			{
-				toast_layer_show(message_layer, "YOU CAN'T SHAKE THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				Being_Shot(cell_index);
-			}
-			break;
-
-			case 5:
-			if (Trenchcoat.Guns == 0)
-			{
-				toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\n\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				break;
-			}
-			else							
-				X = rand() % 2;
-
-			if (X == 0)
-				toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			else
-			{
-				toast_layer_show(message_layer, "YOU KILLED ONE!!!", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				Cops--;
-				if (Cops < 0)
-					Cop_187(cell_index);
-			}			
-			break;
-		}
-	} while(select);
 }
 
 void Being_Shot(MenuIndex *cell_index)
@@ -275,7 +203,7 @@ void Cop_187(MenuIndex *cell_index)
 	snprintf(string,  (strlen("YOU FOUND $2000 ON OFFICER HARDASS!!\n") + 1) * sizeof(char), "YOU FOUND %u DOLLARS ON OFFICER HARDASS!!\n", X);
 	psleep(SHORT_MESSAGE_DELAY);
 	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-
+	free(string);
 	if (Money.Cash >= 1200)
 	{
 		toast_layer_show(message_layer, "WILL YOU PAY $1000 DOLLARS FOR A DOCTOR TO SEW YOU UP?", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
@@ -287,98 +215,6 @@ void Cop_187(MenuIndex *cell_index)
 		}
 	}
 }
-/*
-void Home() {
-	switch(Menu("DRUGWAR!", 7, "SEE PRICES", "TRENCHCOAT", "BUY", "SELL", "JET", "SEE LOAN SHARK", "VISIT BANK"))
-	{
-		case 2:
-		format = "Prices:\nCOCAINE %u\nHEROINE %u\nACID %u\nWEED %u\nSPEED %u\nLUDES %u\nFREE SPACE";
-		//snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, M, N, O, P, Q, R, K);
-		//toast_layer_show(message_layer, string);
-		break;
-
-		case 3:
-		format = "DAY NUMBER: %i";
-		snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, B);					// B = Day Number
-		//toast_layer_show(message_layer, string);
-		//F = Menu("WHAT TO BUY?",7,"COCAINE","HEROINE","ACID","WEED","SPEED","LUDES","NONE");
-		//E = Z / F;
-		char* format = "HOW MUCH?\nYOU CAN AFFORD: %u\nYOU CAN HOLD: %u\n";
-		//snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, E, K);
-		//G = Num_Input(string, (E > K ? K : E), 0, 1);
-		//Z -= F * G;
-
-		switch(F)
-		{
-			case COCAINE:		M += G;	break;
-			case HEROINE:		N += G;	break;
-			case ACID:			O += G;	break;
-			case WEED:			P += G;	break;
-			case SPEED:			Q += G;	break;
-			case LUDES:			R += G;	break;
-		}
-		K = T - M - N - O - P - Q - R;
-		break;
-
-		case 4:
-		format = "DAY %i\n";
-		snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, B);					// B = Day Number
-		toast_layer_show(message_layer, string);
-		F = Menu("WHAT TO SELL?",7,"COCAINE","HEROINE","ACID","WEED","SPEED","LUDES","NONE");
-		switch(F)
-		{
-			case COCAINE: 	E = M;	break;
-			case HEROINE:		E = N;	break;
-			case ACID:			E = O;	break;
-			case WEED:			E = P;	break;
-			case SPEED:			E = Q;	break;
-			case LUDES:			E = R;	break;
-			default:								return;
-		}
-		format = "HOW MUCH?\nYOU HAVE: %i";
-		snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, E);					// E = Quantity
-		//G = Num_Input(string, E, 0, 1);
-		switch(F)
-		{
-			case COCAINE:		M -= G;	break;
-			case HEROINE:		N -= G;	break;
-			case ACID:			O -= G;	break;
-			case WEED:			P -= G;	break;
-			case SPEED:			Q -= G;	break;
-			case LUDES:			R -= G;	break;
-		}
-		Z += F * G;
-		K = T - M - N - O - P - Q - R;
-		break;
-
-		case 5:
-		switch(Menu("WHERE TO, DUDE?", 7, "BRONX", "GHETTO", "CENTRAL PARK", "MANHATTEN", "CONEY ISLAND", "BROOKLYN", "NEVERMIND!"))
-		{
-			case 1:
-			if (N==2)
-			{
-				toast_layer_show(message_layer, "YOU'RE ALREADY IN THE BRONX!");
-				break;
-			}
-			N = 2;
-			return;		// goto Subway();
-
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			N = 1;
-			Subway();
-			return;
-			
-			case 7:
-			return;
-		}
-		break;
-	}
-}
-*/
 
 void Subway(MenuIndex *cell_index)
 {
@@ -390,84 +226,6 @@ void Subway(MenuIndex *cell_index)
 		Game_Over();
 
 	return;
-}
-
-void Loan_Shark(MenuIndex *cell_index) 
-{
-	//int select;
-	/*
-	do {
-		select = Menu("LOAN SHARK...",2,"REPAY","BORROW","LEAVE");
-		switch(select)
-		{
-			case 1:
-			string = malloc((strlen("YOUR DEBT IS: %u\nYOUR WALLET: %u\nREPAY HOW MUCH?") + 1) * sizeof(char));
-			snprintf(string,  (strlen("YOUR DEBT IS: %u\nYOUR WALLET: %u\nREPAY HOW MUCH?") + 1) * sizeof(char), string, Money.Debt, Money.Cash);
-			Num_Input(string, (Money.Cash > Money.Debt ? Money.Debt : Money.Cash), 0, 100, NULL);
-			
-			if (F > Money.Debt)
-				toast_layer_show(message_layer, "THANKS FOR\nTHE TIP, DUDE!");
-			Y = (Y-F);
-			Z = (Z-F);
-			select = 0;
-			break;
-
-			case 2:
-			format = "YOUR DEBT: %u\nYOUR WALLET: %u\nBORROW HOW MUCH?";
-			snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, Y, Z);
-			//F = Num_Input(string, Z, 0, 100);
-			if (F > 5000)
-			{
-				toast_layer_show(message_layer, "YOU THINK HE'S CRAZY, MAN?!");
-				break;
-			}
-			Y = (Y+F);
-			Z = (Z+F);
-			break;
-
-			default:
-			return;
-		}
-	} while(select);
-	*/
-}
-
-void The_Bank(MenuIndex *cell_index)
-{																																				// Lbl_7
-	//int select;
-	/*
-	do {
-		// Bank Menu
-		select = Menu("BANK:",4,"VIEW ACCOUNT","DEPOSIT","WITHDRAW","LEAVE");
-		switch(select)
-		{
-			case 1:		
-			format = "YOUR BALANCE:\n%u";
-			snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, V);						// V = Acct Balance
-			toast_layer_show(message_layer, string);
-			break;
-
-			case 2:
-			format = "HOW MUCH TO DEPOSIT?\nYOU HAVE:\n%u";
-			snprintf(string,  (uint32_t) (strlen(format) + 1) * sizeof(char), format, Z);						// Z = Deposit Amount
-			//G = Num_Input(string, Z, 0, 100);
-			V += G;
-			Z -= G;
-			break;
-
-			case 3:
-			format = "HOW MUCH TO WITHDRAW?\n\nBALANCE:\n $%u";
-			snprintf(string,  (uint32_t) (strlen(format) + 8) * sizeof(char), format, V);					// V = Acct Balance
-			Num_Input(string, V, Money.Balance, Money.Balance % 10);
-			V -= value;
-			Z += value;
-			break;
-
-			default:		
-			return;
-		}
-	} while(select);
-	*/
 }
 
 void Game_Over(void)
@@ -503,9 +261,6 @@ void Game_Over(void)
 void Intro(MenuIndex *cell_index)
 {
 	toast_layer_show(message_layer, "'THE ORIGINAL'\nVERSION 1.0\n\nBY A.CLYMER\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-	
-	string 															= malloc(MAX_ITEM_LENGTH * sizeof(char));
-	format 															= malloc(MAX_ITEM_LENGTH * sizeof(char));
 	
 	Cops																= 0;
 	Health															= 50;
@@ -706,7 +461,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 						);
 		break;
 
-		// Draw Trenchcoat Menu
+		// Draw Prices Menu
 		case 1:
 		snprintf(string,
 						 ((strlen(Trenchcoat.Drug[cell_index->row].Name) + 9) * sizeof(char)),
@@ -716,7 +471,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 						);
 		break;
 
-		// Draw Buy Menu
+		// Draw Trenchcoat Menu
 		case 2:
 			value = Trenchcoat.Capacity;
 			switch(cell_index->row)
@@ -727,12 +482,12 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 				case 4:	value = Damage;														break;
 			}
 			snprintf(string,
-							 ((strlen(trenchcoat_items[cell_index->row]) + 6) * sizeof(char)),
+							 ((strlen(trenchcoat_items[cell_index->row]) + 8) * sizeof(char)),
 							 trenchcoat_items[cell_index->row],
 							 value);
 		break;
 		
-		// Draw Sell Menu
+		// Draw Buy/Sell Menu
 		case 3: case 4:
 		snprintf(string,
 						 (strlen(Trenchcoat.Drug[cell_index->row].Name) + 6) * sizeof(char),
@@ -848,7 +603,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			
 			// Jet Menu
 			case 5:
-				if (cell_index->row == CurrentCity)
+				if (cell_index->row >= CurrentCity)
 					CurrentCity = cell_index->row + 1;
 				else
 					CurrentCity = cell_index->row;

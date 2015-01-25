@@ -1,4 +1,5 @@
 #include "ToastLayer.h"
+#define DEBUG 0
 	
 void toast_click_handler(ClickRecognizerRef recognizer, void *context) {
 	ToastLayer *this = (ToastLayer*)context;
@@ -60,18 +61,18 @@ static void timer_callback(void *context)
 
   toast_layer_hide(this);
   this->is_visible = false;
-	APP_LOG(APP_LOG_LEVEL_INFO, "%svisible", (this->is_visible == true? "   ":"not "));
+	if (DEBUG)	APP_LOG(APP_LOG_LEVEL_INFO, "%svisible", (this->is_visible == true? "   ":"not "));
 }
 
 void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
 {
 	if (this->is_visible == true)
 	{
-		APP_LOG(APP_LOG_LEVEL_INFO, "Wait for last message to expire.");
+		if (DEBUG) APP_LOG(APP_LOG_LEVEL_INFO, "Wait for last message to expire.");
 		
 	}
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "toast_show_layer(offset: %i, size.h: %i, \"%s\")", offset, this->size.h, message);
+	if (DEBUG) APP_LOG(APP_LOG_LEVEL_INFO, "toast_show_layer(offset: %i, size.h: %i, \"%s\")", offset, this->size.h, message);
 	
   if(this->is_visible == false)
   {
