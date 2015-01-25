@@ -58,7 +58,7 @@ void Event_Generator(MenuIndex *cell_index)
 		case 7:
 		{
 			toast_layer_show(message_layer, "PIGS MADE A BIG COKE BUST!\nPRICES ARE OUTRAGEOUS!!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			Trenchcoat.Drug[COCAINE].Price = rand() % 60001 + 80000;
+			Trenchcoat.Drug[COCAINE].Price = rand() % 20000 + 80000;
 			break;
 		}
 
