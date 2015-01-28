@@ -15,14 +15,14 @@
 #define TOAST_LAYER_H
 
 #define TOAST_LAYER_MARGIN        2
-#define TOAST_LAYER_ANIM_DURATION 300
+#define TOAST_LAYER_ANIM_DURATION 400
 
 typedef struct {
   int duration;
   bool is_visible;
   GSize size;
   GRect parent_bounds;
-	AppTimer *toast_timer;
+
   Window *parent;
 
   TextLayer *bg_layer;
@@ -34,29 +34,26 @@ typedef struct {
 /**
  * Create a ToastLayer and add it to the parent Window
  */
-ToastLayer* toast_layer_create(Window *);
+ToastLayer* toast_layer_create(Window *parent);
 
 /**
  * Destroy a ToastLayer
  */
-void toast_layer_destroy(ToastLayer *);
+void toast_layer_destroy(ToastLayer *this);
 
 /**
  * Pop up the ToastLayer
  */
-void toast_layer_show(ToastLayer *, char *, int, int);
+void toast_layer_show(ToastLayer *this, char *message, int duration, int offset);
 
 /**
  * Hide the ToastLayer
  */
-void toast_layer_hide(ToastLayer *);
+void toast_layer_hide(ToastLayer *this);
 
 /**
  * Determine if the ToastLayer is still visible
  */
-bool toast_layer_is_visible(ToastLayer *);
-
-void toast_layer_show_interface(ToastLayer *, char *, int, int);
+bool toast_layer_is_visible(ToastLayer *this);
 
 #endif
-

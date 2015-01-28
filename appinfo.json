@@ -1,32 +1,66 @@
 {
     "appKeys": {},
     "capabilities": [
-        "configurable"
+        ""
     ],
-    "companyName": "aclymer",
+    "companyName": "A.Clymer",
     "longName": "Drug Wars",
     "projectType": "native",
     "resources": {
         "media": [
             {
-                "file": "images/brains_watch_background.png",
-                "name": "IMAGE_BACKGROUND_BRAINS",
+                "file": "images/Buy.png",
+                "name": "IMAGE_BUY_ICON",
                 "type": "png"
             },
             {
-                "file": "images/menu_icon_binary_watch.png",
-                "name": "IMAGE_MENU_ICON_BINARY_WATCH",
+                "file": "images/Rx.png",
+                "menuIcon": true,
+                "name": "IMAGE_GAME_ICON",
                 "type": "png"
             },
             {
-                "file": "images/menu_icon_sector_watch.png",
-                "name": "IMAGE_MENU_ICON_SECTOR_WATCH",
+                "file": "images/Return.png",
+                "name": "IMAGE_RETURN_ICON",
                 "type": "png"
             },
             {
-                "file": "images/menu_icon_big_watch.png",
-                "name": "IMAGE_MENU_ICON_BIG_WATCH",
+                "file": "images/Bank.png",
+                "name": "IMAGE_BANK_ICON",
                 "type": "png"
+            },
+            {
+                "file": "images/Trenchcoat.png",
+                "name": "IMAGE_TRENCHCOAT_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Subway.png",
+                "name": "IMAGE_SUBWAY_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Sell.png",
+                "name": "IMAGE_SELL_ICON",
+                "type": "png"
+            },
+            {
+                "file": "fonts/lucon.ttf",
+                "name": "FONT_LUCIDA_CONSOLE_REG_14",
+                "trackingAdjust": -2,
+                "type": "font"
+            },
+            {
+                "file": "fonts/lucon.ttf",
+                "name": "FONT_LUCIDA_CONSOLE_REG_24",
+                "trackingAdjust": -2,
+                "type": "font"
+            },
+            {
+                "file": "fonts/lucon.ttf",
+                "name": "FONT_LUCIDA_CONSOLE_REG_18",
+                "trackingAdjust": -2,
+                "type": "font"
             }
         ]
     },
