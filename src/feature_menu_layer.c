@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 #include "feature_menu_layer.h"
 #include "ToastLayer.h"
 #include <time.h>
@@ -398,7 +398,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		string = malloc((strlen("BUY $9999K") + 1) * sizeof(char));
 		value = money2String(Money.Cash,"BUY $%u");
 		snprintf(string, ((strlen("BUY $9999K") + 1) * sizeof(char)), format, value);
-		menu_header_simple_icon_draw(ctx, cell_layer, string);
+		menu_header_simple_icon_draw(ctx, cell_layer, string, menu_icons[menu_number]);
 		free(format);
 		free(string);
 		break;
@@ -408,7 +408,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		string = malloc((strlen("SELL $9999K") + 1) * sizeof(char));
 		value = money2String(Money.Cash,"SELL $%u");
 		snprintf(string, ((strlen("SELL $9999K") + 1) * sizeof(char)), format, value);
-		menu_header_simple_icon_draw(ctx, cell_layer, string);
+		menu_header_simple_icon_draw(ctx, cell_layer, string, menu_icons[menu_number]);
 		free(format);
 		free(string);
 		break;
@@ -831,12 +831,12 @@ void window_load(Window *window)
 	// resource_init_current_app must be called before all asset loading
 	int num_menu_icons = 0;
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RETURN_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PRICES_ICON);
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TRENCHCOAT_ICON);
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SUBWAY_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOAN_SHARK_ICON);
 	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANK_ICON);
 	game_icon										 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
 	

@@ -9,6 +9,26 @@
     "resources": {
         "media": [
             {
+                "file": "images/Prices.png",
+                "name": "IMAGE_PRICES_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Shark.png",
+                "name": "IMAGE_LOAN_SHARK_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Bank.png",
+                "name": "IMAGE_BANK_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Sell.png",
+                "name": "IMAGE_SELL_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/Buy.png",
                 "name": "IMAGE_BUY_ICON",
                 "type": "png"
@@ -25,11 +45,6 @@
                 "type": "png"
             },
             {
-                "file": "images/Bank.png",
-                "name": "IMAGE_BANK_ICON",
-                "type": "png"
-            },
-            {
                 "file": "images/Trenchcoat.png",
                 "name": "IMAGE_TRENCHCOAT_ICON",
                 "type": "png"
@@ -37,11 +52,6 @@
             {
                 "file": "images/Subway.png",
                 "name": "IMAGE_SUBWAY_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/Sell.png",
-                "name": "IMAGE_SELL_ICON",
                 "type": "png"
             },
             {

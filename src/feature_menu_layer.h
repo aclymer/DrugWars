@@ -211,10 +211,13 @@ void menu_header_simple_draw(GContext* ctx, const Layer *cell_layer, const char 
 void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
   graphics_context_set_text_color(ctx, GColorBlack);
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap->bounds);
-	titleOrigin.origin.x = bitmap->bounds.size.w;
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	GRect bitmap_bounds 		= bitmap->bounds;
+	GRect title_bounds 			= layer_get_bounds(cell_layer);
+	bitmap_bounds.origin.x 	= (24 - bitmap->bounds.size.w) / 2;
+	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
+	title_bounds.origin.x 	= 24;
+	title_bounds.origin.y 	-= 2;
+  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 // Menu Header Draw function for Icon, Title, and Subtitle
