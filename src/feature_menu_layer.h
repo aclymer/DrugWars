@@ -1,4 +1,6 @@
 #include <pebble.h>
+#undef APP_LOG
+#define APP_LOG(...)
 
 typedef enum ITEMS {
 	TOTAL				= 0,
@@ -51,15 +53,16 @@ short			Score, value, X;
 short			Dice;
 short			CurrentCity;
 bool			num_window_is_visible;
+void 			Exit(void *context);
 void 			show_number_window_layer(void *);
 void 			hide_number_window_layer(void);
 void 			UpdateFreespace(MenuIndex *);
 void 			num_selected_callback(struct NumberWindow *, void *);
 uint8_t 	current_icon;
 uint8_t		menu_number = 0;
-GFont 		*header_font;
-GFont 		*cell_font;
-GFont 		*subtitle_font;
+GFont 		header_font;
+GFont 		cell_font;
+GFont 		subtitle_font;
 
 typedef struct {
 	const char *title;
@@ -96,30 +99,30 @@ BasicItem menu_items[8]	=
 // Trenchcoat Menu
 const char* trenchcoat_items[6] =
 {
-		NULL,
-		"CASH $%u",
-		"DRUGS   : %u ",
-		"GUNS    : %i",
-		"DAMAGE  : %i",
-		"CAPACITY: %u "
+		"",
+		"CASH     $%u   ",
+		"DRUGS       %u ",
+		"GUNS        %i ",
+		"DAMAGE      %i ",
+		"CAPACITY    %u "
 };
 
 // Subway Menu
 const char* locations[7] =
 {
-		"NEVERMIND   ",
-		"THE BRONX   ",
-		"THE GHETTO  ",
+		"",
+		"THE BRONX",
+		"THE GHETTO",
 		"CENTRAL PARK",
-		"MANHATTEN   ",
+		"MANHATTEN",
 		"CONEY ISLAND",
-		"BROOKLYN    "
+		"BROOKLYN"
 };
 
 // Loan Menu
 const char* loan_menu[3] =
 {
-		"      ",
+		"",
 		"PAY   ",
 		"BORROW"
 };
@@ -127,20 +130,20 @@ const char* loan_menu[3] =
 // Bank Menu
 const char* bank_menu[3] =
 {
-		"        ",
+		"",
 		"WITHDRAW",
-		"DEPOSIT "
+		"DEPOSIT"
 };
 
 // Chased Menu
 const char* chased_menu[6] =
 {
-	"BEING CHASED   ",
-	"BY %i PIGS!!   ",
-	"GUNS   %i      ",
+	"BEING CHASED",
+	"BY %i PIGS!!",
+	"GUNS   %i",
 	"DAMAGE %i OF 50",
-	"RUN            ",
-	"FIGHT          "
+	"RUN",
+	"FIGHT"
 };
 
 typedef struct {
@@ -171,7 +174,7 @@ int Cops;
 int Day;										//		B = 1;
 
 // In-Game functions
-bool TrenchcoatAdd(ushort, ITEMS, MenuIndex *);
+//bool TrenchcoatAdd(ushort, ITEMS, MenuIndex *);
 void BuyDrugs(int32_t, MenuIndex *);
 void SellDrugs(int32_t, MenuIndex *);
 void Being_Shot(MenuIndex *);
@@ -186,73 +189,22 @@ void Num_Input(char *, int, int, int, MenuIndex *);
 char	*format;
 char	*string;
 
-int money2String(int value, char* fmt)
-{
-	int div = 1;
-	if (value >= 10000) 		div = 1000;
-	if (value >= 10000000) 	div = 1000000;
-	value /= div;
-	format = malloc((strlen(fmt) + 5) * sizeof(char));
-	if (div == 1000) 				strcat(fmt, "K");
-	if (div == 1000000)			strcat(fmt, "M");
-	strcpy(format, fmt);
-	return value;
-}
+int LOG10(int val);
 
 // Menu Header Draw function for Title only
-void menu_header_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_header_simple_draw(GContext *, const Layer *, const char *);
 
 // Menu Header Draw function for Icon and Title
-void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= bitmap->bounds;
-	GRect title_bounds 			= layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x 	= (24 - bitmap->bounds.size.w) / 2;
-	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	title_bounds.origin.x 	= 24;
-	title_bounds.origin.y 	-= 2;
-  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_header_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
 
 // Menu Header Draw function for Icon, Title, and Subtitle
-void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-	//GRect subtitle_bounds 	= layer_get_bounds(cell_layer);
-	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap->bounds);
-	titleOrigin.origin.x = bitmap->bounds.size.w;
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-	//graphics_draw_text(ctx, subtitle, subtitle_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_header_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
 // Menu Row Draw function for Title only
-void menu_cell_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-	titleOrigin.origin.y -= 4;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_cell_simple_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Icon and Title
-void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds = bitmap->bounds;
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x = (26 - bitmap->bounds.size.w) / 2;
-	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	titleOrigin.origin.x = 26;
-	titleOrigin.origin.y -= 4;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
 
 //! Menu row drawing function to draw a basic cell with the title, subtitle, and icon. 
 //! Call this function inside the `.draw_row` callback implementation, see \ref MenuLayerCallbacks.
@@ -261,16 +213,4 @@ void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const ch
 //! @param title Draws a title in larger text (18 points, Lucida Console font).
 //! @param subtitle Draws a subtitle in smaller text (14 points, Lucida Console font).
 //! @param icon Draws an icon to the left of the text.
-void menu_cell_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
-{
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= bitmap->bounds;
-	GRect title_bounds 			= layer_get_bounds(cell_layer);
-	//GRect subtitle_bounds 	= layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x 	= (26 - bitmap->bounds.size.w) / 2;
-	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	title_bounds.origin.x 	= 26;
-	title_bounds.origin.y 	-= 4;
-  graphics_draw_text(ctx, title, cell_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-	//graphics_draw_text(ctx, subtitle, subtitle_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-}
+void menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
