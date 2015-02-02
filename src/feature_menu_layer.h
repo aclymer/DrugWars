@@ -1,6 +1,6 @@
 #include <pebble.h>
-#undef APP_LOG
-#define APP_LOG(...)
+//#undef APP_LOG
+//#define APP_LOG(...)
 
 typedef enum ITEMS {
 	TOTAL				= 0,
@@ -24,7 +24,7 @@ enum LOCATIONS {
 		BROOKLYN     	= 6
 };
 
-#define NUM_MENU_ICONS 							8
+#define NUM_MENU_ICONS 							9
 	
 #define MENU_CELL_BASIC_HT					17
 	
@@ -44,7 +44,7 @@ enum LOCATIONS {
 #define PUNISHMENT_DELAY						10
 
 MenuLayer *home_menu_layer;
-
+MenuIndex *num_window_context;
 GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon;
 
@@ -70,7 +70,7 @@ typedef struct {
 } BasicItem;
 	
 // Menu Header Heights
-const short menu_header_heights[9] =
+const short menu_header_heights[10] =
 {
 	MENU_CELL_BASIC_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT			, 
@@ -80,7 +80,8 @@ const short menu_header_heights[9] =
 	SUBTITLED_MENU_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT * 3	,
 	MENU_CELL_BASIC_HEADER_HT * 3 ,
-	MENU_CELL_BASIC_HEADER_HT * 3
+	MENU_CELL_BASIC_HEADER_HT * 3	,
+	MENU_CELL_BASIC_HEADER_HT * 4
 };
 
 // Home Menu
@@ -99,7 +100,7 @@ BasicItem menu_items[8]	=
 // Trenchcoat Menu
 const char* trenchcoat_items[6] =
 {
-		"",
+		"BACK",
 		"CASH     $%u   ",
 		"DRUGS       %u ",
 		"GUNS        %i ",
@@ -144,6 +145,14 @@ const char* chased_menu[6] =
 	"DAMAGE %i OF 50",
 	"RUN",
 	"FIGHT"
+};
+
+// Confirm Menu
+const char* confirm_menu[3] =
+{
+	"",
+	"YES",
+	"NO"
 };
 
 typedef struct {

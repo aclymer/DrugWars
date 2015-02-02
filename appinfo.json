@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/DWPD.png",
+                "name": "IMAGE_DWPD_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/Prices.png",
                 "name": "IMAGE_PRICES_ICON",
                 "type": "png"

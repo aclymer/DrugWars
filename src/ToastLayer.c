@@ -17,8 +17,7 @@ void toast_layer_destroy(ToastLayer *this)
 {
   text_layer_destroy(this->bg_layer);
   text_layer_destroy(this->content_layer);
-
-  free(this);
+	free(this);
 }
 
 static void anim_stopped(struct Animation *animation, bool finished, void *context) {
