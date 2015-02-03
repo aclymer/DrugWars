@@ -1,4 +1,5 @@
 #include "feature_menu_layer.h"
+#include "instruction_layer.h"
 #include "ToastLayer.h"
 #include <time.h>
 #include <math.h>
@@ -19,7 +20,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Dice 															= (rand() % 21		+ 0			)				;
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
-	//Dice = 14;
+	Dice = rand() % 2 + 14;
 	switch(Dice)
 	{
 		case 1:
@@ -66,84 +67,6 @@ void Event_Generator(MenuIndex *cell_index)
 			break;
 		}
 
-		case 12:
-		case 13:
-		{
-			if (Money.Cash >= 500 && Trenchcoat.Freespace >= 5)
-			{
-				string = (char*)malloc((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char));
-				snprintf(string, ((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char)), "WILL YOU BUY A ");
-				switch(rand() % 3)
-				{
-					case 0:		strcat(string, "BARRETTA"); 							break;
-					case 1:		strcat(string, "SATURDAY NIGHT SPECIAL");	break;
-					case 2:		strcat(string, ".44 MAGNUM");							break;
-				}
-				strcat(string, "\nFOR $400?");
-				toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				free(string);
-				X = 1;
-				if (X == 1)
-				{
-					Trenchcoat.Guns			++;//I = I + 1;
-					Money.Cash 					-= 400;//Z = Z - 400;
-					Trenchcoat.Capacity -= 5;//T = T - 5;
-					UpdateFreespace(cell_index);
-				}
-			}
-			break;
-		}
-		
-		case 14:
-			//toast_layer_show(message_layer, "THERE'S SOME WEED HERE THAT SMELLS LIKE GOOD STUFF!!", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);	
-			X = 1;
-
-			if (X == 1)
-			{
-				toast_layer_show(message_layer, "YOU HALLUCINATE ON THE WILDEST TRIP OF YOUR LIFE, STUMBLE ON TO THE SUBWAY TRACKS AND GET CREAMED BY A TRAIN.",
-												 LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			}
-		break;
-	
-		case 15:
-			if (Money.Cash >= 300)
-			{
-				toast_layer_show(message_layer, "WILL YOU BUY A NEW TRENCHCOAT WITH MORE POCKETS FOR $200?", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				X = 1;
-				if (X == 1)
-				{
-					Trenchcoat.Capacity += 20;
-					Money.Cash -= 200;
-					UpdateFreespace(cell_index);
-				}	
-			}
-		break;
-		
-		case 16:
-			if (Trenchcoat.Freespace >= 8)
-			{
-				X = rand() % 7 + 1; // [1-6]
-				int Y = rand() % 8 + 1;
-				string = (char*)malloc((strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char));
-				snprintf(string,
-								 (strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char),
-								 "YOU FOUND %i UNITS OF %s\nON A DEAD DUDE IN THE SUBWAY!!!",
-								 Y, Trenchcoat.Drug[X].Name
-								);				
-				toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-				free(string);
-				Trenchcoat.Drug[X].Quantity += Y;
-				UpdateFreespace(cell_index);
-				return;																									// goto void Home() {;
-			}
-		break;
-		
-		case 17:
-			toast_layer_show(message_layer, "THE MARKET IS FLOODED WITH CHEAP HOME-MADE ACID!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-			Trenchcoat.Drug[ACID].Price = (rand() % 51 + 20) * 10;		
-			return;																									// goto void Home() {;
-		break;
-		
 		case 9:
 		case 10:
 		case 11:
@@ -161,42 +84,122 @@ void Event_Generator(MenuIndex *cell_index)
 				menu_layer_reload_data(home_menu_layer);
 			}	
 		break;
+		
+		case 12:
+		case 13:
+		{
+			if (Money.Cash >= 500 && Trenchcoat.Freespace >= 5)
+			{
+				confirm_header = (char*)malloc((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char));
+				snprintf(confirm_header, ((strlen("WILL YOU BUY A SATURDAY NIGHT SPECIAL for $400?") + 1) * sizeof(char)), "WILL YOU BUY A ");
+				switch(rand() % 3)
+				{
+					case 0:		strcat(confirm_header, "BARRETTA"); 							break;
+					case 1:		strcat(confirm_header, "SATURDAY NIGHT SPECIAL");	break;
+					case 2:		strcat(confirm_header, ".44 MAGNUM");							break;
+				}
+				strcat(confirm_header, "\nFOR $400?");
+				p_MenuCallbackContext[1] = &Buy_Gun;
+				menu_number = 9;
+				menu_layer_reload_data(home_menu_layer);
+			}
+			break;
+		}
+		
+		case 14:
+		toast_layer_show(message_layer, "THERE'S SOME WEED HERE THAT SMELLS LIKE GOOD STUFF!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);	
+		confirm_header = malloc((strlen("WILL YOU SMOKE IT?") + 1) * sizeof(char));
+		strcpy(confirm_header, "WILL YOU SMOKE IT?");
+		p_MenuCallbackContext[0] = NULL;
+		p_MenuCallbackContext[1] = &Smoke_It;
+		menu_number = 9;
+		menu_layer_reload_data(home_menu_layer);
+		break;
+	
+		case 15:
+		if (Money.Cash >= 300)
+		{
+			confirm_header = malloc((strlen("WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?") + 1) * sizeof(char));
+			strcpy(confirm_header, "WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?");
+			p_MenuCallbackContext[0] = NULL;
+			p_MenuCallbackContext[1] = Buy_Trenchcoat;
+			menu_number = 9;
+			menu_layer_reload_data(home_menu_layer);
+		}
+		break;
+		
+		case 16:
+		if (Trenchcoat.Freespace >= 8)
+		{
+			X = rand() % 7 + 1; // [1-6]
+			int Y = rand() % 8 + 1;
+			string = (char*)malloc((strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char));
+			snprintf(string,
+							 (strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char),
+							 "YOU FOUND %i UNITS OF %s\nON A DEAD DUDE IN THE SUBWAY!!!",
+							 Y, Trenchcoat.Drug[X].Name
+							);				
+			toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
+			free(string);
+			Trenchcoat.Drug[X].Quantity += Y;
+			UpdateFreespace(cell_index);
+			return;																									// goto void Home() {;
+		}
+		break;
+		
+		case 17:
+		toast_layer_show(message_layer, "THE MARKET IS FLOODED WITH CHEAP HOME-MADE ACID!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+		Trenchcoat.Drug[ACID].Price = (rand() % 51 + 20) * 10;
+		break;
 	}
 	
 	return;
 }
 
+void Buy_Gun(MenuIndex *cell_index)
+{
+		Trenchcoat.Guns			++;//I = I + 1;
+		Money.Cash 					-= 400;//Z = Z - 400;
+		Trenchcoat.Capacity -= 5;//T = T - 5;
+		UpdateFreespace(cell_index);
+}
+
+void Smoke_It(MenuIndex *cell_index)
+{
+		toast_layer_show(message_layer, "YOU HALLUCINATE, STUMBLE ON TO THE TRACKS AND GET HIT BY A TRAIN!",
+										 SHORT_MESSAGE_DELAY, menu_header_heights[0]);
+		Game_Over(cell_index);
+}
+
 void Being_Shot(MenuIndex *cell_index)
 {
 	X = (rand() % 2);
-
-	toast_layer_show(message_layer, "THEY'RE FIRING AT YOU!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-	psleep(LONG_MESSAGE_DELAY);
+	format = malloc((strlen("YOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
 	if (X == 0)
-	{
-		toast_layer_show(message_layer, "THEY MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);				
-		return;
-	}
+		strcpy(format, "THEY MISSED!!!");		
 	else
 	{
-		toast_layer_show(message_layer, "YOU'VE BEEN HIT!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 		Damage += 3;
-		if (Damage >= 50)
-		{
-			toast_layer_show(message_layer, "YOU'VE BEEN KILLED!!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-		}
-		return;
+		if (Damage >= 50)	
+			strcpy(format, "YOU'VE BEEN HIT!!!");	
+		else
+			strcpy(format, "YOU'VE BEEN KILLED!!!");
 	}
+	
+	string = malloc((strlen("THEY'RE FIRING AT YOU!!!\n\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
+	snprintf(string, (strlen("THEY'RE FIRING AT YOU!!!\n\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "THEY'RE FIRING AT YOU!!!\n\n%s", format);
+	free(format);
+	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	free(string);
+	return;
 }
 
 void Cop_187(MenuIndex *cell_index)
 {		
-	toast_layer_show(message_layer, "HOLY SHIT! YOU KILLED ALL OF THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	X = (rand() % 1250 + 750);
 	Money.Cash += X;
-	string = (char*)malloc((strlen("YOU FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
-	snprintf(string,  (strlen("YOU FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "YOU FOUND %u DOLLARS ON OFFICER HARDASS!!", X);
-	psleep(SHORT_MESSAGE_DELAY);
+	string = (char*)malloc((strlen("YOU KILLED 'EM ALL AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
+	snprintf(string,  (strlen("YOU KILLED 'EM ALL AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "YOU KILLED 'EM ALL AND FOUND %u DOLLARS ON OFFICER HARDASS!!", X);
 	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	free(string);
 	if (Money.Cash >= 1200)
@@ -211,55 +214,16 @@ void Cop_187(MenuIndex *cell_index)
 	}
 }
 
-void Subway(MenuIndex *cell_index)
+void Exit(MenuIndex *cell_index)
 {
-	Day++;
-	Money.Debt 		*= 1.1;
-	Money.Balance *= 1.06;
-
-	if (Day == 31)
-		Game_Over();
-
-	return;
-}
-
-void Game_Over(void)
-{
-	Score += Money.Balance - Money.Debt;
-
-	if (Score < 0)
-		Score = 0;
-	else
-	{
-		Score /= 315;
-		Score *= 10;
-		if (Score > 100)
-			Score = 100;
-	}
-
-	string = (char*)malloc((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char));
-	snprintf(string, ((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char)),
-					 "GAME OVER!\n\nYOUR SCORE:\n %i%%", Score);
-	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, 0);// V = Total Score
-	free(string);
-	//V = Input("PLAY AGAIN?",2,"YES","NO");
-
-	//if (V==1)
-	//	Intro();
-
-	app_timer_register(5000, Exit, NULL);
-}
-
-void Exit(void *context)
-{
-	toast_layer_show(message_layer, "THANKS FOR PLAYING! REMEMBER TO WATCH YOUR BACK. PEACE!!!", LONG_MESSAGE_DELAY, 0);
-	window_stack_pop_all(true);
+	toast_layer_show(message_layer, "\n\nTHANKS FOR PLAYING! \nREMEMBER TO WATCH YOUR BACK. \nPEACE!!!", LONG_MESSAGE_DELAY, 0);
+	//window_stack_pop_all(true);
 	window_destroy(window);
 }
 
 void Intro(MenuIndex *cell_index)
 {
-	toast_layer_show(message_layer, "THE ORIGINAL\nFOR\npebbleOS\nVERSION 1.0\nBY A.CLYMER", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	toast_layer_show(message_layer, "THE ORIGINAL \nFOR  \npebbleOS \nVERSION 1.0 \nBY A.CLYMER ", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	
 	Cops																= 0;
 	Health															= 50;
@@ -301,8 +265,7 @@ void Intro(MenuIndex *cell_index)
 	Trenchcoat.Drug[LUDES].Price				= (rand() % 5 + 1) * 10;
 	Trenchcoat.Drug[LUDES].Quantity			= 0;
 
-	//Num_Input("ORIGINAL GAME FOR IBM BY:\nJOHN E. DELL\nINSTRUCTIONS ?\n (1) Yes / (2) No",2,1,1);
-	//APP_LOG(APP_LOG_LEVEL_INFO, "Input() = %d", value);
+	app_timer_register(SHORT_MESSAGE_DELAY, Show_Instructions, cell_index);
 /*
 	if (0)
 	{	
@@ -313,6 +276,19 @@ void Intro(MenuIndex *cell_index)
 	}
 */
 	return;
+}
+
+// Display Instruction Layer
+void Show_Instructions(void *data)
+{
+	return;
+	confirm_header = malloc((strlen("WOULD YOU LIKE TO SEE THE INSTRUCTIONS?") + 1) * sizeof(char));
+	strcpy(confirm_header, "WOULD YOU LIKE TO SEE THE INSTRUCTIONS?");
+	p_MenuCallbackContext[0] = hide_instruction_layer;
+	p_MenuCallbackContext[1] = show_instruction_layer;
+	menu_number = 9;
+	menu_layer_reload_data(home_menu_layer);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Showing Instructions...");
 }
 
 // A callback is used to specify the amount of sections of menu items
@@ -355,7 +331,7 @@ int16_t menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_ind
 	// This is a define provided in pebble.h that you may use for the default height
 	switch(menu_number)
 	{
-		case 9:		return MENU_CELL_BASIC_HT * 2;
+		case 9:		return (150 - menu_header_heights[menu_number]) / 2;
 		default:	return MENU_CELL_BASIC_HT; 
 	}
 }
@@ -498,9 +474,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		free(string);
 		break;	
 		
-		// Congirm Menu Header
+		// Confirm Menu Header
 		case 9:
-		menu_header_simple_draw(ctx, cell_layer, data);
+		menu_header_long_draw(ctx, cell_layer, confirm_header);
 		break;
 	}
 }
@@ -626,12 +602,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		}
 		break;
 		
+		// Draw Confirm Menu
 		case 9:
-		if (cell_index->row > 0)
-		{
-			string = (char*)malloc((strlen(confirm_menu[cell_index->row]) + 1) * sizeof(char));
-			snprintf(string, (strlen(confirm_menu[cell_index->row]) + 1) * sizeof(char), "%s", confirm_menu[cell_index->row]);
-		}	
+		string = (char*)malloc((strlen(confirm_menu[cell_index->row]) + 1) * sizeof(char));
+		strcpy(string, confirm_menu[cell_index->row]);
 		break;
 	}
 	
@@ -639,6 +613,8 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		menu_cell_simple_icon_draw(ctx, cell_layer, "BACK", menu_icons[0]);	
 	else if (menu_number == 0)
 		menu_cell_simple_icon_draw(ctx, cell_layer, string, menu_icons[cell_index->row + 1]);
+	else if (menu_number == 9)
+		menu_cell_simple_centered_draw(ctx, cell_layer, string);
 	else
 		menu_cell_simple_draw(ctx, cell_layer, string);
 	
@@ -712,7 +688,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						strcat(string, "?");
 						Num_Input(string, (Money.Cash / Trenchcoat.Drug[cell_index->row].Price > Trenchcoat.Freespace ?
 											Trenchcoat.Freespace :
-											Money.Cash / Trenchcoat.Drug[cell_index->row].Price), 0, 1, cell_index
+											Money.Cash / Trenchcoat.Drug[cell_index->row].Price), 0, 1, 0, cell_index
 										 );
 						free(string);
 						return;
@@ -730,7 +706,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						strcpy(string, "SELL HOW MUCH ");
 						strcat(string, Trenchcoat.Drug[cell_index->row].Name);
 						strcat(string, "?");
-						Num_Input(string, Trenchcoat.Drug[cell_index->row].Quantity, 0, 1, cell_index);
+						Num_Input(string, Trenchcoat.Drug[cell_index->row].Quantity, 0, 1, 0, cell_index);
 						free(string);
 					}
 					else
@@ -741,121 +717,144 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			
 			// Jet Menu
 			case 5:
-				if (cell_index->row >= CurrentCity)
-					CurrentCity = cell_index->row + 1;
-				else
-					CurrentCity = cell_index->row;
-				Subway(cell_index);
-				menu_number = 0;
-				Event_Generator(cell_index);
+			if (cell_index->row >= CurrentCity)
+				CurrentCity = cell_index->row + 1;
+			else
+				CurrentCity = cell_index->row;
+
+			Day++;
+			Money.Debt 		*= 1.1;
+			Money.Balance *= 1.06;
+
+			if (Day == 31)
+				Game_Over(cell_index);
+
+			menu_number = 0;
+			Event_Generator(cell_index);
 			break;
 			
 			// Loan Shark
 			case 6:			
-				if (CurrentCity != BRONX)
-				{
-					toast_layer_show(message_layer, "THE LOAN SHARK ONLY DEALS IN THE BRONX.", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-					
-						APP_LOG(APP_LOG_LEVEL_DEBUG, "Current City: %i", CurrentCity);
-					break;
+			if (CurrentCity != BRONX)
+			{
+				toast_layer_show(message_layer, "THE LOAN SHARK ONLY DEALS IN THE BRONX.", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
+
+				APP_LOG(APP_LOG_LEVEL_DEBUG, "Current City: %i", CurrentCity);
+				break;
+			}
+			else
+			{
+				if (cell_index->row == 1)
+				{			
+					string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
+					strcpy(string, "HOW MUCH TO PAY?");
+					int high = Money.Debt < Money.Cash ? Money.Debt : Money.Cash - 100;
+					Num_Input(string, high, 0, EXP(LOG10(high) - 2), high, cell_index);
+					free(string);
 				}
-				else
-				{
-					if (cell_index->row == 1)
-					{			
-						string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
-						strcpy(string, "HOW MUCH TO PAY?");
-						Num_Input(string, Money.Debt < Money.Cash ? Money.Debt : Money.Cash - 100, 0, 100, cell_index);
-						free(string);
-					}
-					if (cell_index->row == 2)
-					{			
+				if (cell_index->row == 2)
+				{		
+					if (Money.Debt >= 50000)
+						toast_layer_show(message_layer, "YOU THINK I CRAZY BRO? \nBEAT IT!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+					else
+					{
 						string = (char*)malloc((strlen("HOW MUCH TO BORROW?") + 1) * sizeof(char));
 						strcpy(string, "HOW MUCH TO BORROW?");
-						Num_Input(string, 50000, 0, 1000, cell_index);
+						Num_Input(string, 50000 - Money.Debt, 0, 1000, 0, cell_index);
 						free(string);
 					}
 				}
+			}
 			break;
 
 			// Bank Menu
 			case 7:
-				if (CurrentCity != BROOKLYN)
+			if (CurrentCity != BROOKLYN)
+			{
+				toast_layer_show(message_layer, "THE BANK IS IN BROOKLYN!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+				break;
+			}
+			else
+			{
+				if (cell_index->row == 1)
+				{			
+					string = (char*)malloc((strlen("HOW MUCH TO WITHDRAW?") + 1) * sizeof(char));
+					strcpy(string, "HOW MUCH TO WITHDRAW?");
+					Num_Input(string, Money.Balance, 0, 100, 0, cell_index);
+					free(string);
+				}
+				if (cell_index->row == 2)
+				{			
+					string = (char*)malloc((strlen("HOW MUCH TO DEPOSIT?") + 1) * sizeof(char));
+					strcpy(string, "HOW MUCH TO DEPOSIT?");
+					Num_Input(string, Money.Cash, 0, 100, Money.Cash / 2, cell_index);
+					free(string);
+				}
+			}
+			break;
+			
+			
+			// Chased Menu
+			case 8:
+			if (cell_index->row == 2)
+			{
+				X = rand() % 2;
+				APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
+				if (X == 0)
 				{
-					toast_layer_show(message_layer, "THE BANK IS IN BROOKLYN!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-					break;
+					toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+					if (Day == 31)
+						return; 													// goto Home();
+					else
+					{
+						Cops = 0;
+						menu_number = 0;
+						break;
+					}
 				}
 				else
 				{
-					if (cell_index->row == 1)
-					{			
-						string = (char*)malloc((strlen("HOW MUCH TO WITHDRAW?") + 1) * sizeof(char));
-						strcpy(string, "HOW MUCH TO WITHDRAW?");
-						Num_Input(string, Money.Balance, 0, 100, cell_index);
-						free(string);
-					}
-					if (cell_index->row == 2)
-					{			
-						string = (char*)malloc((strlen("HOW MUCH TO DEPOSIT?") + 1) * sizeof(char));
-						strcpy(string, "HOW MUCH TO DEPOSIT?");
-						Num_Input(string, Money.Cash, 0, 100, cell_index);
-						free(string);
-					}
+					toast_layer_show(message_layer, "YOU CAN'T SHAKE THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+					Being_Shot(cell_index);
 				}
-			break;
-			
-			case 8:
-				if (cell_index->row == 2)
+			}
+			if (cell_index->row == 3)
+			{
+				if (Trenchcoat.Guns == 0)
 				{
+					toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, 0);
+					break;
+				}
+				else							
 					X = rand() % 2;
-					APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
-					if (X == 0)
-					{
-						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-						if (Day == 31)
-							return; 													// goto Home();
-						else
-						{
-							Cops = 0;
-							menu_number = 0;
-							break;
-						}
-					}
-					else
-					{
-						toast_layer_show(message_layer, "YOU CAN'T SHAKE THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-						Being_Shot(cell_index);
-					}
-				}
-				if (cell_index->row == 3)
-				{
-					if (Trenchcoat.Guns == 0)
-					{
-						toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, 0);
-						break;
-					}
-					else							
-						X = rand() % 2;
 
-					if (X == 0)
-						toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-					else
-					{
-						toast_layer_show(message_layer, "YOU KILLED ONE!!!", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
-						Cops--;
-						if (Cops < 0)
-							Cop_187(cell_index);
-					}	
-				}
+				if (X == 0)
+					toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+				else
+				{
+					toast_layer_show(message_layer, "YOU KILLED ONE!!!", LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
+					Cops--;
+					if (Cops < 0)
+						Cop_187(cell_index);
+				}	
+			}
 			break;
 			
 			case 9:
-			APP_LOG(APP_LOG_LEVEL_INFO, "Yes/No");
-			//data(void);
+			APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", confirm_header);
+			free(confirm_header);
+			if (p_MenuCallbackContext[cell_index->row] != NULL)
+			{
+				p_MenuCallbackContext[cell_index->row](cell_index);
+				*p_MenuCallbackContext = NULL;
+			}
+			APP_LOG(APP_LOG_LEVEL_INFO, (cell_index->row ? "YES" : "NO"));
+			menu_number = 0;
+			menu_layer_reload_data(menu_layer);
 			break;
 			
 			default:
-				menu_number = 0;
+			menu_number = 0;
 			break;
 		}
 		
@@ -962,14 +961,14 @@ void window_load(Window *window)
 	layer_add_child(window_layer, menu_layer_get_layer(home_menu_layer));
 }
 
-void Num_Input(char *text, int high, int low, int delta, MenuIndex *cell_index)
+void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cell_index)
 {
-	*num_window_context = *cell_index;
+	*p_NumWindowContext = *cell_index;
 	number_window_set_label(number_window, text);
 	number_window_set_max(number_window, high);
 	number_window_set_min(number_window, low);
 	number_window_set_step_size(number_window, delta);
-	number_window_set_value(number_window, 0);
+	number_window_set_value(number_window, set);
   window_stack_push(number_window_get_window(number_window), true);
 }
 
@@ -987,6 +986,16 @@ void SellDrugs(int32_t howMany, MenuIndex *cell_index)
 	Trenchcoat.Drug[cell_index->row].Quantity 	-= howMany;
 	Trenchcoat.Freespace												+= howMany;
 	Money.Cash 																	+= howMany * Trenchcoat.Drug[cell_index->row].Price;
+}
+
+void Buy_Trenchcoat(MenuIndex *cell_index)
+{
+	if (cell_index->row)
+	{
+		Trenchcoat.Capacity += 20;
+		Money.Cash -= 200;
+		UpdateFreespace(cell_index);
+	}		
 }
 
 void window_unload(Window *window) {
@@ -1028,16 +1037,48 @@ void UpdateFreespace(MenuIndex *cell_index)
 	Trenchcoat.Freespace = Trenchcoat.Capacity - Trenchcoat.Drug[TOTAL].Quantity;
 }
 
+void Play_Again(MenuIndex *cell_index)
+{
+	confirm_header = malloc((strlen("\n\nPLAY AGAIN?") + 1) * sizeof(char));
+	strcpy(confirm_header, "PLAY AGAIN?");
+	menu_number = 9;
+	p_MenuCallbackContext[0] = &Exit;
+	p_MenuCallbackContext[1] = &Intro;
+	menu_layer_reload_data(home_menu_layer);
+}
+
+void Game_Over(MenuIndex *cell_index)
+{
+	Score += Money.Balance - Money.Debt;
+
+	if (Score < 0)
+		Score = 0;
+	else
+	{
+		Score /= 315;
+		Score *= 10;
+		if (Score > 100)
+			Score = 100;
+	}
+
+	string = (char*)malloc((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char));
+	snprintf(string, ((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char)),
+					 "GAME OVER!\n\nYOUR SCORE:\n %i%%", Score);
+	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, 0);
+	free(string);
+	app_timer_register(LONG_MESSAGE_DELAY, (void*)Play_Again, cell_index);
+}
+
 int main(void)
 {		
 	srand(time(0));	
 	window = window_create();
-	num_window_context = malloc(sizeof(MenuIndex));
+	p_NumWindowContext = malloc(sizeof(MenuCallback));
 	number_window = number_window_create(NULL, (NumberWindowCallbacks) 
 																			 {.selected 		= number_window_selected_callback,
 																				.incremented 	= number_window_incremented_callback,
 																				.decremented 	= number_window_decremented_callback
-																			 }, num_window_context);
+																			 }, p_NumWindowContext);
 	// Create message layer
 	message_layer = toast_layer_create(window);
 
@@ -1067,6 +1108,15 @@ int LOG10(int val)
 	}
 	APP_LOG(APP_LOG_LEVEL_INFO, "LOG10 %i", count);
 	return count;
+}
+
+int EXP(int val)
+{
+	int temp = 1;
+	for (int i = 0; i < val; i++)
+		temp *= 10;
+	
+	return temp;
 }
 
 // Menu Header Draw function for Title only
@@ -1111,6 +1161,15 @@ void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title,
 	graphics_draw_text(ctx, subtitle, cell_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
+// Menu Header Draw function for long title only
+void menu_header_long_draw(GContext* ctx, const Layer *cell_layer, const char *title)
+{
+  graphics_context_set_text_color(ctx, GColorBlack);
+	GRect titleOrigin = layer_get_bounds(cell_layer);
+	titleOrigin.size.h = menu_header_heights[menu_number];
+  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+}
+
 // Menu Row Draw function for Title only
 void menu_cell_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
@@ -1118,6 +1177,15 @@ void menu_cell_simple_draw(GContext* ctx, const Layer *cell_layer, const char *t
 	GRect titleOrigin = layer_get_bounds(cell_layer);
 	titleOrigin.origin.y -= 3;
   graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+}
+
+// Menu Row Draw function for Title only (Centered)
+void menu_cell_simple_centered_draw(GContext* ctx, const Layer *cell_layer, const char *title)
+{
+  graphics_context_set_text_color(ctx, GColorBlack);
+	GRect titleOrigin = layer_get_bounds(cell_layer);
+	titleOrigin.origin.y -= 5;
+  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
 // Menu Row Draw function for Icon and Title

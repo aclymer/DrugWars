@@ -69,7 +69,7 @@ void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
     this->is_visible = true;
 
     // Set up
-    this->duration = duration * 1000;
+    this->duration = duration;
 
     // Allocate buffer
     int length = strlen(message) + 1;

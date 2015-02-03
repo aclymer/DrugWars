@@ -1,7 +1,7 @@
 #include <pebble.h>
-//#undef APP_LOG
-//#define APP_LOG(...)
-
+#undef APP_LOG
+#define APP_LOG(...)
+	
 typedef enum ITEMS {
 	TOTAL				= 0,
  	COCAINE 		= 1,
@@ -39,12 +39,12 @@ enum LOCATIONS {
 #define BASIC_ITEM_LENGTH						17
 #define MAX_ITEM_LENGTH							63
 	
-#define SHORT_MESSAGE_DELAY					2
-#define LONG_MESSAGE_DELAY					5
-#define PUNISHMENT_DELAY						10
+#define SHORT_MESSAGE_DELAY					2000
+#define LONG_MESSAGE_DELAY					5000
+#define PUNISHMENT_DELAY						10000
 
 MenuLayer *home_menu_layer;
-MenuIndex *num_window_context;
+MenuIndex *p_NumWindowContext;
 GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon;
 
@@ -53,11 +53,6 @@ short			Score, value, X;
 short			Dice;
 short			CurrentCity;
 bool			num_window_is_visible;
-void 			Exit(void *context);
-void 			show_number_window_layer(void *);
-void 			hide_number_window_layer(void);
-void 			UpdateFreespace(MenuIndex *);
-void 			num_selected_callback(struct NumberWindow *, void *);
 uint8_t 	current_icon;
 uint8_t		menu_number = 0;
 GFont 		header_font;
@@ -148,57 +143,66 @@ const char* chased_menu[6] =
 };
 
 // Confirm Menu
-const char* confirm_menu[3] =
+const char* confirm_menu[2] =
 {
-	"",
-	"YES",
-	"NO"
+	"NO",
+	"YES"
 };
 
 typedef struct {
-	int Price;								// C , H , A , W , S , L
-	int Quantity;							// M , N , O , P , Q , R
+	int Price;
+	int Quantity;
 	const char *Name;
 } DRUGS;
 
 typedef struct {
 	int Price;
-	int Capacity;							//	T = 100;
-	int Guns;									//	= 0;
-	int Freespace;						//	K	= 200;
+	int Capacity;
+	int Guns;
+	int Freespace;
 	DRUGS Drug[7];				
 } Inventory;
 
 typedef struct {
-	int Balance;							//		V = 0;
-	int Cash;									//		Z = 2000;
-	int Debt;									//		Y = 0;
+	int Balance;
+	int Cash;
+	int Debt;
 } FinancialData;
 
 Inventory Trenchcoat;
 FinancialData Money;
-int Health;									//		V = 50;
-int Damage;									//		J = 0;
+int Health;
+int Damage;
 int Cops;
-int Day;										//		B = 1;
+int Day;
 
 // In-Game functions
-//bool TrenchcoatAdd(ushort, ITEMS, MenuIndex *);
-void BuyDrugs(int32_t, MenuIndex *);
-void SellDrugs(int32_t, MenuIndex *);
-void Being_Shot(MenuIndex *);
-void Cop_187(MenuIndex *);
-void Game_Over(void);
-void Subway(MenuIndex *);
-void Event_Generator(MenuIndex *);
-	
-// Pebble wrapper conditional functions
-void Num_Input(char *, int, int, int, MenuIndex *);
+typedef void					(*MenuCallback)(MenuIndex *);
+void Intro						(MenuIndex *);
+void Being_Shot				(MenuIndex *);
+void Buy_Trenchcoat		(MenuIndex *);
+void Buy_Gun					(MenuIndex *);
+void Cop_187					(MenuIndex *);
+void Event_Generator	(MenuIndex *);
+void Exit							(MenuIndex *);
+void Game_Over				(MenuIndex *);
+void Smoke_It					(MenuIndex *);
+void UpdateFreespace	(MenuIndex *);
+void Play_Again				(MenuIndex *);
+void BuyDrugs					(int32_t, MenuIndex *);
+void SellDrugs				(int32_t, MenuIndex *);
+void Show_Instructions(void *);
+void show_number_window_layer(void *);
+void hide_number_window_layer(void);
+void num_selected_callback(struct NumberWindow *, void *);
 
-char	*format;
-char	*string;
+MenuCallback p_MenuCallbackContext[2];
+
+// Pebble wrapper conditional functions
+void Num_Input(char *, int, int, int, int, MenuIndex *);
 
 int LOG10(int val);
+int EXP(int val);
 
 // Menu Header Draw function for Title only
 void menu_header_simple_draw(GContext *, const Layer *, const char *);
@@ -209,8 +213,14 @@ void menu_header_simple_icon_draw(GContext *, const Layer *, const char *, const
 // Menu Header Draw function for Icon, Title, and Subtitle
 void menu_header_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
+// Menu Header Draw function for long titles (multiple-lines)
+void menu_header_long_draw(GContext *, const Layer *, const char *);
+
 // Menu Row Draw function for Title only
 void menu_cell_simple_draw(GContext *, const Layer *, const char *);
+
+// Menu Row Draw function for Title only (Centered)
+void menu_cell_simple_centered_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Icon and Title
 void menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
@@ -223,3 +233,7 @@ void menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const G
 //! @param subtitle Draws a subtitle in smaller text (14 points, Lucida Console font).
 //! @param icon Draws an icon to the left of the text.
 void menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
+
+char	*format;
+char	*string;
+char 	*confirm_header;
