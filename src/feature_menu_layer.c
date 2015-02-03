@@ -20,7 +20,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Dice 															= (rand() % 21		+ 0			)				;
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
-	Dice = rand() % 2 + 14;
+	//Dice = rand() % 2 + 14;
 	switch(Dice)
 	{
 		case 1:
