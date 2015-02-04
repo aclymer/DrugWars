@@ -10,9 +10,7 @@ typedef enum ITEMS {
  	WEED				= 4,
  	SPEED				= 5,
 	LUDES				= 6,
-	CAPACITY		= 7,
-	GUNS 				= 8
-} ITEMS;
+} TRENCHCOAT_ITEMS;
 
 enum LOCATIONS {
 		NEVERMIND			= 0,
@@ -58,6 +56,7 @@ uint8_t		menu_number = 0;
 GFont 		header_font;
 GFont 		cell_font;
 GFont 		subtitle_font;
+GFont			confirm_font;
 
 typedef struct {
 	const char *title;
@@ -96,7 +95,7 @@ BasicItem menu_items[8]	=
 const char* trenchcoat_items[6] =
 {
 		"BACK",
-		"CASH     $%u   ",
+		"AMMO        %u ",
 		"DRUGS       %u ",
 		"GUNS        %i ",
 		"DAMAGE      %i ",
@@ -134,8 +133,8 @@ const char* bank_menu[3] =
 // Chased Menu
 const char* chased_menu[6] =
 {
-	"BEING CHASED",
-	"BY %i PIGS!!",
+	"%i PIGS",
+	"IN PERSUIT!!!",
 	"GUNS   %i",
 	"DAMAGE %i OF 50",
 	"RUN",
@@ -156,10 +155,19 @@ typedef struct {
 } DRUGS;
 
 typedef struct {
+	int Capacity;
+	int Damage;
+	int Price;
+	int Quantity;
+	int Ammo;
+	char *Name;
+} GUNS;
+
+typedef struct {
 	int Price;
 	int Capacity;
-	int Guns;
 	int Freespace;
+	GUNS Guns[4];
 	DRUGS Drug[7];				
 } Inventory;
 
@@ -183,6 +191,7 @@ void Being_Shot				(MenuIndex *);
 void Buy_Trenchcoat		(MenuIndex *);
 void Buy_Gun					(MenuIndex *);
 void Cop_187					(MenuIndex *);
+void Doctor						(MenuIndex *);
 void Event_Generator	(MenuIndex *);
 void Exit							(MenuIndex *);
 void Game_Over				(MenuIndex *);
