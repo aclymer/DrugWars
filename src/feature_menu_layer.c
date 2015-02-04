@@ -702,7 +702,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
 					strcpy(string, "HOW MUCH TO PAY?");
 					int high = Money.Debt < Money.Cash ? Money.Debt : Money.Cash - 100;
-					int delta = EXP(LOG10(high) - 2);
+					int delta = EXP(LOG10(Money.Debt) - 2);
 					Num_Input(string, high, 0, delta, (delta > high ? high : delta), cell_index);
 					free(string);
 				}
