@@ -133,7 +133,7 @@ const char* bank_menu[3] =
 // Chased Menu
 const char* chased_menu[6] =
 {
-	"%i PIGS",
+	"%i PIG",
 	"IN PERSUIT!!!",
 	"GUNS   %i",
 	"DAMAGE %i OF 50",

@@ -174,7 +174,7 @@ void Event_Generator(MenuIndex *cell_index)
 
 void Intro(MenuIndex *cell_index)
 {
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.03\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.04\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	
 	Cops																= 0;
 	Health															= 50;
@@ -433,8 +433,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		
 		// Chased Menu Header
 		case 8:
-		string = (char*)malloc((strlen(chased_menu[0]) + 1) * sizeof(char));
-		snprintf(string, ((strlen(chased_menu[0]) + 1) * sizeof(char)), chased_menu[1], Cops);
+		string = (char*)malloc((strlen(chased_menu[0]) + 2) * sizeof(char));
+		snprintf(string, ((strlen(chased_menu[0]) + 2) * sizeof(char)), chased_menu[0], Cops);
+		if (Cops > 1) strcat(string, "S");
 		menu_header_draw(ctx, cell_layer, string, chased_menu[1], menu_icons[menu_number]);
 		free(string);
 		break;	
