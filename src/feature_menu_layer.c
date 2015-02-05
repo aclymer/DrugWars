@@ -174,7 +174,7 @@ void Event_Generator(MenuIndex *cell_index)
 
 void Intro(MenuIndex *cell_index)
 {
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\n\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.03\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	
 	Cops																= 0;
 	Health															= 50;
@@ -337,7 +337,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		
 		// Buy Menu Header
 		case 3:
-		string = (char*)malloc((strlen("BUY    $") * sizeof(char) + len));
+		string = (char*)malloc((strlen("BUY     $") * sizeof(char) + len));
 		switch(LOG10(Money.Cash))
 			{
 				default:	snprintf(string, 17 * sizeof(char), "%s",					"BUY IT ALL!");					break;
@@ -359,7 +359,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 	
 		// Sell Menu Header
 		case 4:
-		string = (char*)malloc((strlen("SELL   $") * sizeof(char) + len));
+		string = (char*)malloc((strlen("SELL    $") * sizeof(char) + len));
 		switch(LOG10(Money.Cash))
 			{
 				default:	snprintf(string, 17 * sizeof(char), "%s",					"FOR THE WIN!!!");			break;
@@ -411,7 +411,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		
 		// Bank Menu Header
 		case 7:
-		string = (char*)malloc((strlen("BALANCE $") * sizeof(char) + len));
+		string = (char*)malloc((strlen("BALANCE    $") * sizeof(char) + len));
 		switch(LOG10(Money.Balance))
 			{
 				default:	snprintf(string, 17 * sizeof(char), "%s",							"YOU'RE DEAD!!");						break;
