@@ -18,7 +18,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	
+	Dice = rand() % 2 + 11;
 	//Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
 	switch(Dice)
@@ -56,7 +56,7 @@ void Event_Generator(MenuIndex *cell_index)
 		snprintf(string,
 						 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $100000 AND 30 OF YOUR COCAINE!") + 1) * sizeof(char),
 						 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i AND %i OF YOUR %s!",
-						 (int) (Money.Cash / 0.33333),
+						 (int) (Money.Cash * 0.33333),
 						 (int) (Trenchcoat.Drug[X].Quantity * 0.33333),
 						 Trenchcoat.Drug[X].Name);
 		toast_layer_show(message_layer, string, PUNISHMENT_DELAY, menu_header_heights[menu_number]);
@@ -274,7 +274,7 @@ uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_inde
 		case 5: 	return 6;		break;
 		case 6:		return 3;		break;
 		case 7:		return 3;		break;
-		case 8:		return 4;		break;
+		case 8:		return 5;		break;
 		case 9:		return 2;		break;
 		default: 	return 1;		break;
 	}
@@ -503,12 +503,17 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		case 8:
 		switch(cell_index->row)
 		{
-			case 0:	
+			case 0:		
+			string = (char*)malloc((strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char));
+			snprintf(string, (strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char), chased_menu[cell_index->row + 2], Trenchcoat.Guns[0].Ammo);
+			break;
+
+			case 1:
 			string = (char*)malloc((strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char));
 			snprintf(string, (strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char), chased_menu[cell_index->row + 2], Trenchcoat.Guns[0].Quantity);
 			break;
 
-			case 1:
+			case 2:
 			string = (char*)malloc((strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char));
 			snprintf(string, (strlen(chased_menu[cell_index->row + 2]) + 1) * sizeof(char), chased_menu[cell_index->row + 2], Damage);
 			break;
@@ -713,7 +718,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			
 			// Chased Menu
 			case 8:
-			if (cell_index->row == 2)
+			if (cell_index->row == 3)
 			{
 				X = rand() % 3;
 				APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
@@ -741,16 +746,17 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
 				}
 			}
-			if (cell_index->row == 3)	{
+			if (cell_index->row == 4)	{
 				if (Trenchcoat.Guns[0].Quantity == 0)
-					toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, 0);
+					toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 				else if (Trenchcoat.Guns[0].Ammo == 0)
-					toast_layer_show(message_layer, "YOU DON'T HAVE ANY AMMO!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, 0);					
+					toast_layer_show(message_layer, "YOU DON'T HAVE ANY AMMO!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);					
 				else
 				{
-					if (rand() % 3 + 1 == 2) {
+					X = rand() % 3 + 1;
+					if (X == 2) {
 						toast_layer_show(message_layer, "YOU KILLED ONE!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-						if (--Cops == 0) {
+						if (--Cops < 1) {
 							Cops = 0;
 							app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Cop_187, cell_index);
 						}

@@ -77,7 +77,7 @@ const short menu_header_heights[10] =
 	SUBTITLED_MENU_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT * 3	,
 	MENU_CELL_BASIC_HEADER_HT * 3 ,
-	MENU_CELL_BASIC_HT			  * 4	,
+	SUBTITLED_MENU_HEADER_HT + 17	,
 	MENU_CELL_BASIC_HEADER_HT * 4
 };
 
@@ -134,11 +134,12 @@ const char* bank_menu[3] =
 };
 
 // Chased Menu
-const char* chased_menu[6] =
+const char* chased_menu[7] =
 {
 	"%i PIG",
 	"IN PERSUIT!!",
-	"GUNS   %i",
+	"AMMO         %i",
+	"GUNS         %i",
 	"DAMAGE %i OF 50",
 	"RUN",
 	"FIGHT"
