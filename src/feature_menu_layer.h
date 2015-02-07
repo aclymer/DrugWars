@@ -47,7 +47,8 @@ GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon;
 
 // In-Game Variables
-short			Score, value, X;
+int				Score, value, X;
+double		Y;
 short			Dice;
 short			CurrentCity;
 bool			num_window_is_visible;
@@ -62,7 +63,9 @@ typedef struct {
 	const char *title;
 	const char *subtitle;
 } BasicItem;
-	
+
+const char postfix[4] = {'\0','K', 'M', 'B'};
+
 // Menu Header Heights
 const short menu_header_heights[10] =
 {
@@ -74,7 +77,7 @@ const short menu_header_heights[10] =
 	SUBTITLED_MENU_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT * 3	,
 	MENU_CELL_BASIC_HEADER_HT * 3 ,
-	MENU_CELL_BASIC_HEADER_HT * 3	,
+	MENU_CELL_BASIC_HT			  * 4	,
 	MENU_CELL_BASIC_HEADER_HT * 4
 };
 
@@ -96,10 +99,10 @@ const char* trenchcoat_items[6] =
 {
 		"BACK",
 		"AMMO        %u ",
+		"DAMAGE      %i ",
 		"DRUGS       %u ",
 		"GUNS        %i ",
-		"DAMAGE      %i ",
-		"CAPACITY    %u "
+		"FREESPACE   %u "
 };
 
 // Subway Menu
@@ -134,7 +137,7 @@ const char* bank_menu[3] =
 const char* chased_menu[6] =
 {
 	"%i PIG",
-	"IN PERSUIT!!!",
+	"IN PERSUIT!!",
 	"GUNS   %i",
 	"DAMAGE %i OF 50",
 	"RUN",
@@ -149,7 +152,7 @@ const char* confirm_menu[2] =
 };
 
 typedef struct {
-	int Price;
+	double Price;
 	int Quantity;
 	const char *Name;
 } DRUGS;
@@ -172,67 +175,69 @@ typedef struct {
 } Inventory;
 
 typedef struct {
-	int Balance;
-	int Cash;
-	int Debt;
+	double Balance;
+	double Cash;
+	double Debt;
 } FinancialData;
 
 Inventory Trenchcoat;
 FinancialData Money;
-int Health;
-int Damage;
-int Cops;
-int Day;
+int 	Health;
+int 	Damage;
+int 	Cops;
+int 	Day;
 
 // In-Game functions
-typedef void					(*MenuCallback)(MenuIndex *);
-void Intro						(MenuIndex *);
-void Being_Shot				(MenuIndex *);
-void Buy_Trenchcoat		(MenuIndex *);
-void Buy_Gun					(MenuIndex *);
-void Cop_187					(MenuIndex *);
-void Doctor						(MenuIndex *);
-void Event_Generator	(MenuIndex *);
-void Exit							(MenuIndex *);
-void Game_Over				(MenuIndex *);
-void Smoke_It					(MenuIndex *);
-void UpdateFreespace	(MenuIndex *);
-void Play_Again				(MenuIndex *);
-void BuyDrugs					(int32_t, MenuIndex *);
-void SellDrugs				(int32_t, MenuIndex *);
-void Show_Instructions(void *);
-void show_number_window_layer(void *);
-void hide_number_window_layer(void);
-void num_selected_callback(struct NumberWindow *, void *);
+typedef void						(*MenuCallback)(MenuIndex *);
+void 	Intro							(MenuIndex *);
+void 	Being_Shot				(MenuIndex *);
+void 	Buy_Trenchcoat		(MenuIndex *);
+void 	Buy_Gun						(MenuIndex *);
+void 	Cop_187						(MenuIndex *);
+void 	Doctor						(MenuIndex *);
+void 	Event_Generator		(MenuIndex *);
+void 	Exit							(MenuIndex *);
+void 	Game_Over					(MenuIndex *);
+void 	Smoke_It					(MenuIndex *);
+void 	UpdateFreespace		(MenuIndex *);
+void 	Play_Again				(MenuIndex *);
+void 	BuyDrugs					(int32_t, MenuIndex *);
+void 	SellDrugs					(int32_t, MenuIndex *);
+void 	Show_Instructions	(void *);
+void 	show_number_window_layer(void *);
+void 	hide_number_window_layer(void);
+void 	num_selected_callback(struct NumberWindow *, void *);
 
 MenuCallback p_MenuCallbackContext[2];
 
 // Pebble wrapper conditional functions
-void Num_Input(char *, int, int, int, int, MenuIndex *);
+void 	Num_Input(char *, int, int, int, int, MenuIndex *);
 
-int LOG10(int val);
-int EXP(int val);
+// App specific number functions
+int 	LOG10(double val);
+int 	EXP(int val);
+void 	floatstrcat(char*, double, int);
 
 // Menu Header Draw function for Title only
-void menu_header_simple_draw(GContext *, const Layer *, const char *);
+void 	menu_header_simple_draw(GContext *, const Layer *, const char *);
 
 // Menu Header Draw function for Icon and Title
-void menu_header_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
+void 	menu_header_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
 
 // Menu Header Draw function for Icon, Title, and Subtitle
-void menu_header_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
+void 	menu_header_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
 // Menu Header Draw function for long titles (multiple-lines)
-void menu_header_long_draw(GContext *, const Layer *, const char *);
+void 	menu_header_long_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Title only
-void menu_cell_simple_draw(GContext *, const Layer *, const char *);
+void 	menu_cell_simple_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Title only (Centered)
-void menu_cell_simple_centered_draw(GContext *, const Layer *, const char *);
+void 	menu_cell_simple_centered_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Icon and Title
-void menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
+void 	menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const GBitmap *);
 
 //! Menu row drawing function to draw a basic cell with the title, subtitle, and icon. 
 //! Call this function inside the `.draw_row` callback implementation, see \ref MenuLayerCallbacks.
@@ -241,7 +246,7 @@ void menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const G
 //! @param title Draws a title in larger text (18 points, Lucida Console font).
 //! @param subtitle Draws a subtitle in smaller text (14 points, Lucida Console font).
 //! @param icon Draws an icon to the left of the text.
-void menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
+void 	menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
 char	*format;
 char	*string;

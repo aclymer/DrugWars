@@ -61,19 +61,19 @@
             },
             {
                 "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_14",
-                "trackingAdjust": -2,
-                "type": "font"
-            },
-            {
-                "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_24",
-                "trackingAdjust": -2,
-                "type": "font"
-            },
-            {
-                "file": "fonts/lucon.ttf",
                 "name": "FONT_LUCIDA_CONSOLE_REG_18",
+                "trackingAdjust": -2,
+                "type": "font"
+            },
+            {
+                "file": "fonts/lucon.ttf",
+                "name": "FONT_LUCIDA_CONSOLE_REG_22",
+                "trackingAdjust": -2,
+                "type": "font"
+            },
+            {
+                "file": "fonts/lucon.ttf",
+                "name": "FONT_LUCIDA_CONSOLE_REG_14",
                 "trackingAdjust": -2,
                 "type": "font"
             }
@@ -82,7 +82,7 @@
     "shortName": "Drug Wars",
     "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
     "versionCode": 1,
-    "versionLabel": "1.04",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": false
     }
