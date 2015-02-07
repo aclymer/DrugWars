@@ -18,9 +18,10 @@ void Event_Generator(MenuIndex *cell_index)
 	Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	Dice = rand() % 2 + 11;
+	Dice = rand() % 9 + 9;
 	//Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
+	
 	switch(Dice)
 	{
 		case 1:
@@ -163,12 +164,14 @@ void Event_Generator(MenuIndex *cell_index)
 
 void Intro(MenuIndex *cell_index)
 {
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.1\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	menu_number = 0;
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.2\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	
 	Cops																= 0;
 	Health															= 50;
 	Day																	= 1;
 	CurrentCity													= BRONX;
+	Damage															= 0;
 	
 	Money.Cash 													= 2000;
 	Money.Balance												= 0;
@@ -227,6 +230,7 @@ void Intro(MenuIndex *cell_index)
 	Trenchcoat.Guns[3].Capacity					= 9;
 	Trenchcoat.Guns[3].Quantity					= 0;
 
+	UpdateFreespace(cell_index);
 	//app_timer_register(SHORT_MESSAGE_DELAY, Show_Instructions, cell_index);
 /*
 	if (0)
@@ -386,7 +390,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		if (Money.Balance > 9999)
 		{
 			snprintf(string, ((strlen("BALANCE $9.999K") + 1) * sizeof(char)), "%s", "BALANCE $");
-			floatstrcat(string, Money.Balance, LOG10(Money.Balance) % 3 - 1);
+			floatstrcat(string, Money.Balance, 0);
 		}
 		else
 			snprintf(string, ((strlen("BALANCE $9.999K") + 1) * sizeof(char)), "%s%i", "BALANCE $", (int)Money.Balance);
@@ -754,18 +758,23 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				else
 				{
 					X = rand() % 3 + 1;
-					if (X == 2) {
-						toast_layer_show(message_layer, "YOU KILLED ONE!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+					if (X == 2)
+					{
 						if (--Cops < 1) {
 							Cops = 0;
 							app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Cop_187, cell_index);
 						}
 						else
+						{
+							toast_layer_show(message_layer, "YOU KILLED ONE!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 							app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
+						}
 					}
 					else
+					{
 						toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
-	
+						app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
+					}
 					for(X = 1; X < 4; X++) {  
 						if (Trenchcoat.Guns[X].Ammo > 0)
 							break;
@@ -988,8 +997,8 @@ void Cop_187(MenuIndex *cell_index)
 {		
 	X = (rand() % 1250 + 750);
 	Money.Cash += X;
-	string = (char*)malloc((strlen("\nHOLY SHIT! YOU KILLED ALL THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
-	snprintf(string,  (strlen("\nHOLY SHIT! YOU KILLED ALL THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "\nHOLY SHIT! YOU KILLED ALL THEM AND FOUND $%u ON OFFICER HARDASS!!", X);
+	string = (char*)malloc((strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
+	snprintf(string,  (strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $%u ON OFFICER HARDASS!!", X);
 	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, 0);
 	free(string);
 	if (Money.Cash >= 1200 && Damage > 0)
@@ -1047,25 +1056,27 @@ void Play_Again(MenuIndex *cell_index)
 
 void Game_Over(MenuIndex *cell_index)
 {
-	Score += Money.Balance - Money.Debt;
-
-	if (Score < 0)
-		Score = 0;
+	Score = Money.Balance - Money.Debt;
+	if (Score < 0) Score = 0;
+	unsigned long int HighScore = (persist_exists(HIGH_SCORE_KEY) ? persist_read_int(HIGH_SCORE_KEY) : Score);
+	if (Score > HighScore)
+	{
+		HighScore = Score;
+		persist_write_int(HIGH_SCORE_KEY, HighScore);
+		string = (char*)malloc((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char));
+		snprintf(string, ((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char)),
+						 "GAME OVER!\n\nNEW HIGH SCORE:\n$%li", (long)Score);
+	}
 	else
 	{
-		Score /= 315;
-		Score *= 10;
-		if (Score > 100)
-			Score = 100;
+		string = (char*)malloc((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char));
+		snprintf(string, ((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char)),
+						 "GAME OVER!\n\nHIGH SCORE:\n$%li\nYOUR SCORE:\n$%li", HighScore, (long)Score);
 	}
-
-	string = (char*)malloc((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char));
-	snprintf(string, ((strlen("GAME OVER!\n\nYOUR SCORE:\n 100%%") + 1) * sizeof(char)),
-					 "GAME OVER!\n\nYOUR SCORE:\n %i%%", Score);
-	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, 0);
+	toast_layer_show(message_layer, string, PUNISHMENT_DELAY, 0);
 	free(string);
 	
-	app_timer_register(LONG_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Play_Again, cell_index);
+	app_timer_register(PUNISHMENT_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Play_Again, cell_index);
 }
 
 void window_unload(Window *window) {

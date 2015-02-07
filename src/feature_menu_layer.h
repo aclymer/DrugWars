@@ -22,21 +22,17 @@ enum LOCATIONS {
 		BROOKLYN     	= 6
 };
 
+#define HIGH_SCORE_KEY							0
 #define NUM_MENU_ICONS 							9
-	
 #define MENU_CELL_BASIC_HT					17
-	
 #define	MENU_CELL_BASIC_HEADER_HT		26
 #define SUBTITLED_MENU_HEADER_HT	 	44
-
 #define NUM_MENU_SECTIONS						1
 #define NUM_HOME_MENU_ITEMS 				7
 #define NUM_PRICES_MENU_ITEMS				7
 #define NUM_SELL_MENU_ITEMS					7
-
 #define BASIC_ITEM_LENGTH						17
 #define MAX_ITEM_LENGTH							63
-	
 #define SHORT_MESSAGE_DELAY					2000
 #define LONG_MESSAGE_DELAY					5000
 #define PUNISHMENT_DELAY						10000
@@ -47,8 +43,8 @@ GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon;
 
 // In-Game Variables
-int				Score, value, X;
-double		Y;
+int				value, X;
+double		Score, Y;
 short			Dice;
 short			CurrentCity;
 bool			num_window_is_visible;
