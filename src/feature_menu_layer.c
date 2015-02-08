@@ -10,7 +10,7 @@ NumberWindow	*number_window;
 ToastLayer 		*message_layer;
 void Event_Generator(MenuIndex *cell_index)
 {
-	Dice = (rand() % 21	+ 0);
+	Dice = (rand() % 21);
 	
 	Trenchcoat.Drug[COCAINE].Price 		= (rand() % 12001	+ 16000	)				;
 	Trenchcoat.Drug[HEROINE].Price 		= (rand() % 7001	+ 5000	)				;
@@ -18,7 +18,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	Dice = rand() % 9 + 9;
+	Dice = rand() % 6 + 9;
 	//Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
 	
@@ -136,10 +136,10 @@ void Event_Generator(MenuIndex *cell_index)
 		{
 			X = rand() % 6 + 1; // [1-6]
 			int Y = rand() % 8 + 1; // [1-8]
-			string = (char*)malloc((strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char));
+			string = (char*)malloc((strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!") + 1) * sizeof(char));
 			snprintf(string,
-							 (strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!!!") + 1) * sizeof(char),
-							 "YOU FOUND %i UNITS OF %s\nON A DEAD DUDE IN THE SUBWAY!!!",
+							 (strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!") + 1) * sizeof(char),
+							 "YOU FOUND %i UNITS OF %s\nON A DEAD DUDE IN THE SUBWAY!",
 							 Y, Trenchcoat.Drug[X].Name
 							);				
 			toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[menu_number]);
@@ -151,7 +151,7 @@ void Event_Generator(MenuIndex *cell_index)
 		break;
 		
 		case 17:
-		toast_layer_show(message_layer, "THE MARKET IS FLOODED WITH CHEAP HOME-MADE ACID!!!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+		toast_layer_show(message_layer, "THE MARKET IS FLOODED WITH CHEAP HOME-MADE ACID!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 		Trenchcoat.Drug[ACID].Price = (rand() % 51 + 20) * 10;
 		break;	
 		
@@ -165,7 +165,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	menu_number = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.2\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.21\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 	
 	Cops																= 0;
 	Health															= 50;
@@ -757,12 +757,18 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					toast_layer_show(message_layer, "YOU DON'T HAVE ANY AMMO!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);					
 				else
 				{
+					for(X = 1; X < 4; X++) {  
+						if (Trenchcoat.Guns[X].Ammo > 0)
+							break;
+					}
+					Trenchcoat.Guns[X].Ammo--;
 					X = rand() % 3 + 1;
 					if (X == 2)
 					{
 						if (--Cops < 1) {
 							Cops = 0;
-							app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Cop_187, cell_index);
+							Cop_187(cell_index);
+							break;
 						}
 						else
 						{
@@ -775,12 +781,6 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[menu_number]);
 						app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
 					}
-					for(X = 1; X < 4; X++) {  
-						if (Trenchcoat.Guns[X].Ammo > 0)
-							break;
-					}
-
-					Trenchcoat.Guns[X].Ammo--;
 					UpdateFreespace(cell_index);
 				}
 			}
@@ -1009,6 +1009,11 @@ void Cop_187(MenuIndex *cell_index)
 		p_MenuCallbackContext[1] = &Doctor;
 		menu_number = 9;
 		menu_layer_reload_data(home_menu_layer);	
+	}
+	else
+	{
+		menu_number = 0;
+		menu_layer_reload_data(home_menu_layer);
 	}
 }
 
