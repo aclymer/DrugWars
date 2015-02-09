@@ -20,7 +20,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Player.Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Player.Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Player.Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	Player.Dice = rand() % 6 + 9;
+	//Player.Dice = rand() % 6 + 9;
 	//Player.Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
 	

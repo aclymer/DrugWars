@@ -1,6 +1,6 @@
 #include <pebble.h>
-//#undef APP_LOG
-//#define APP_LOG(...)
+#undef APP_LOG
+#define APP_LOG(...)
 	
 typedef enum ITEMS {
 	TOTAL				= 0,
