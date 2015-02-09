@@ -20,7 +20,7 @@ void Event_Generator(MenuIndex *cell_index)
 	Player.Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Player.Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Player.Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	//Player.Dice = rand() % 6 + 9;
+	//Player.Dice = 8;
 	//Player.Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
 	
@@ -54,18 +54,19 @@ void Event_Generator(MenuIndex *cell_index)
 		break;
 
 		case 8:
-		X = rand() % 7 + 1;
-		string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $100000 AND 30 OF YOUR COCAINE!") + 1) * sizeof(char));
+		for (X = 1; X < 8; X++) 
+			if (Player.Trenchcoat.Drug[X].Quantity > 0) break;
+		string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char));
 		snprintf(string,
-						 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $100000 AND 30 OF YOUR COCAINE!") + 1) * sizeof(char),
+						 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char),
 						 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i AND %i OF YOUR %s!",
-						 (int) (Player.Money.Cash * 0.33333),
-						 (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333),
+						 (int) (Player.Money.Cash * 0.33333 + 0.5),
+						 (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
 						 Player.Trenchcoat.Drug[X].Name);
 		toast_layer_show(message_layer, string, PUNISHMENT_DELAY, menu_header_heights[Player.MenuNumber]);
 		free(string);
-		Player.Money.Cash *= 0.666667;
-		Player.Trenchcoat.Drug[X].Quantity *= 0.666667;
+		Player.Money.Cash -= (int) (Player.Money.Cash * 0.33333 + 0.5);
+		Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5);
 		break;
 		
 		case 9:
@@ -167,7 +168,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.31\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.32\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
