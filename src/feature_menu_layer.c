@@ -10,21 +10,21 @@ NumberWindow	*number_window;
 ToastLayer 		*message_layer;
 void Event_Generator(MenuIndex *cell_index)
 {
-	Dice = (rand() % 21);
+	Player.Dice = (rand() % 21);
 	
 	APP_LOG(APP_LOG_LEVEL_INFO, "Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
 	
-	Player.Trenchcoat.Drug[COCAINE].Price 		= (rand() % 12001	+ 16000	)				;
-	Player.Trenchcoat.Drug[HEROINE].Price 		= (rand() % 7001	+ 5000	)				;
+	Player.Trenchcoat.Drug[COCAINE].Price 	= (rand() % 12001	+ 16000	)				;
+	Player.Trenchcoat.Drug[HEROINE].Price 	= (rand() % 7001	+ 5000	)				;
 	Player.Trenchcoat.Drug[ACID].Price 			= (rand() % 35		+ 10		) * 100	;
 	Player.Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Player.Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Player.Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	//Dice = rand() % 6 + 9;
-	//Dice++;
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Dice);
+	Player.Dice = rand() % 6 + 9;
+	//Player.Dice++;
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
 	
-	switch(Dice)
+	switch(Player.Dice)
 	{
 		case 1:
 		toast_layer_show(message_layer, "RIVAL DEALERS ARE SELLING CHEAP LUDES!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
@@ -73,9 +73,9 @@ void Event_Generator(MenuIndex *cell_index)
 		case 11:
 		if (Player.Trenchcoat.Drug[TOTAL].Quantity >= 30)
 		{		
-			if (Dice == 9)	Player.Cops = 1;
-			if (Dice == 10)	Player.Cops = 3;
-			if (Dice == 11)	Player.Cops = 4;
+			if (Player.Dice == 9)	Player.Cops = 1;
+			if (Player.Dice == 10)	Player.Cops = 3;
+			if (Player.Dice == 11)	Player.Cops = 4;
 
 			string = (char*)malloc((strlen("OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char));
 			if (Player.Cops > 1)
@@ -167,7 +167,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.30\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.31\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -730,7 +730,10 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
 				if (X == 2)	{
 						Player.MenuNumber = 0;
-					toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+					if (Player.Cops < 2)
+						toast_layer_show(message_layer, "YOU LOST HIM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+					else
+						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					if (Player.Day == 31)
 						Game_Over(cell_index);
 					else if (Player.Money.Cash >= 1200 && Player.Damage > 0)
@@ -748,7 +751,10 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					}
 				}
 				else {
-					toast_layer_show(message_layer, "YOU CAN'T SHAKE THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+					if (Player.Cops < 2)
+						toast_layer_show(message_layer, "YOU CAN'T SHAKE HIM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+					else
+						toast_layer_show(message_layer, "YOU CAN'T SHAKE THEM!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
 				}
 			}
@@ -791,13 +797,14 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			case 9:
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", confirm_header);
 			free(confirm_header);
+			Player.MenuNumber = 0;
 			if (p_MenuCallbackContext[cell_index->row] != NULL)
 			{
 				p_MenuCallbackContext[cell_index->row](cell_index);
-				*p_MenuCallbackContext = NULL;
+				p_MenuCallbackContext[0] = NULL;
+				p_MenuCallbackContext[1] = NULL;
 			}
 			APP_LOG(APP_LOG_LEVEL_INFO, (cell_index->row ? "YES" : "NO"));
-			Player.MenuNumber = 0;
 			menu_layer_reload_data(menu_layer);
 			break;
 			
@@ -974,7 +981,10 @@ void Being_Shot(MenuIndex *cell_index)
 	format = malloc((strlen("YOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
 	X = rand() % 2;
 	if (X == 0)
-		strcpy(format, "THEY MISSED!!!");		
+		if (Player.Cops < 2)
+			strcpy(format, "HE MISSED!!!");
+		else
+			strcpy(format, "THEY MISSED!!!");		
 	else
 	{
 		Player.Damage += 3 + 3 * (int)(rand() % Player.Cops + 1);
@@ -988,7 +998,10 @@ void Being_Shot(MenuIndex *cell_index)
 	}
 	
 	string = malloc((strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
-	snprintf(string, (strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "THEY'RE FIRING AT YOU!!!\n%s", format);
+	if (Player.Cops < 2)
+		snprintf(string, (strlen("HE'S FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "HE'S' FIRING AT YOU!!!\n%s", format);
+	else
+		snprintf(string, (strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "THEY'RE FIRING AT YOU!!!\n%s", format);
 	free(format);
 	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	free(string);
@@ -1000,7 +1013,10 @@ void Cop_187(MenuIndex *cell_index)
 	X = (rand() % 1250 + 750);
 	Player.Money.Cash += X;
 	string = (char*)malloc((strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
-	snprintf(string,  (strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $%u ON OFFICER HARDASS!!", X);
+	if (Player.Dice == 9)
+		snprintf(string,  (strlen("\nHOLY SHIT! YOU KILLED HIM AND FOUND $2000 ON HIS CARCASS!!") + 1) * sizeof(char), "\nHOLY SHIT! YOU KILLED HIM AND FOUND $%u ON HIS CARCASS!!", X);
+	else
+		snprintf(string,  (strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char), "\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $%u ON OFFICER HARDASS!!", X);
 	toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, 0);
 	free(string);
 	if (Player.Money.Cash >= 1200 && Player.Damage > 0)
@@ -1095,21 +1111,25 @@ void Save_Game(void)
 	persist_write_data(PLAYER_DATA_KEY, &Player, sizeof(Player));
 	persist_write_int(PLAYER_SIZE_KEY, sizeof(Player));
 	APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %i", sizeof(Player));
+	return;
 }
 
 void Load_Game(MenuIndex *cell_index)
 {
-	persist_read_data(PLAYER_DATA_KEY, &Player, persist_read_int(PLAYER_SIZE_KEY));
-	if (Player.MenuNumber < 7)
+	if (value == 8)
+		Player.MenuNumber = value;
+	else
 		Player.MenuNumber = 0;
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
+	
+	menu_layer_reload_data(home_menu_layer);
+	
+	return;
 }
 
-void window_unload(Window *window) {
-	
-	// Save Player Data
-	if ( Player.Day < 31)
-		Save_Game();
-	
+void window_unload(Window *window) 
+{	
 	// Destroy the menu layer
 	menu_layer_destroy(home_menu_layer);
 
@@ -1131,6 +1151,10 @@ static void destroy_ui(void)
 	toast_layer_destroy(message_layer);
 	number_window_destroy(number_window);
   window_destroy(window);
+	
+	// Save Player Data
+	if ( Player.Day < 31)
+		Save_Game();
 }
 
 void hide_number_window_layer(void)
@@ -1163,11 +1187,20 @@ int main(void)
 	// Check for saved game
 	if (persist_exists(PLAYER_DATA_KEY))
 	{
-		confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
-		snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
-		p_MenuCallbackContext[0] = &Intro;
-		p_MenuCallbackContext[1] = &Load_Game;
-		Player.MenuNumber = 9;
+		persist_read_data(PLAYER_DATA_KEY, &Player, persist_read_int(PLAYER_SIZE_KEY));
+		if (Player.MenuNumber != 8)
+		{
+			value = Player.MenuNumber;
+			confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
+			snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
+
+			//TODO: set temp_callbacks for possible menu 8,9 loading plus add confirm_header to persist
+
+			p_MenuCallbackContext[0] = &Intro;
+			p_MenuCallbackContext[1] = &Load_Game;
+			Player.MenuNumber = 9;
+		}
+		
 		menu_layer_reload_data(home_menu_layer);
 	}
 	else
@@ -1175,6 +1208,10 @@ int main(void)
 	
 	app_event_loop();
 
+	free(p_NumWindowContext);
+	if (p_MenuCallbackContext[0] != NULL) free(p_MenuCallbackContext[0]);
+	if (p_MenuCallbackContext[1] != NULL) free(p_MenuCallbackContext[1]);
+	
 	destroy_ui();
 }
 
@@ -1187,7 +1224,6 @@ int LOG10(double val)
 		val /= 10;
 		count++;
 	}
-	APP_LOG(APP_LOG_LEVEL_INFO, "LOG10 %i", count);
 	return count;
 }
 
@@ -1195,9 +1231,7 @@ int EXP(int val)
 {
 	int temp = 1;
 	for (int i = 0; i < val; i++)
-		temp *= 10;
-	APP_LOG(APP_LOG_LEVEL_INFO, "EXP %i", temp);
-	
+		temp *= 10;	
 	return temp;
 }
 

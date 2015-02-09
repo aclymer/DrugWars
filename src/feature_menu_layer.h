@@ -1,6 +1,6 @@
 #include <pebble.h>
-#undef APP_LOG
-#define APP_LOG(...)
+//#undef APP_LOG
+//#define APP_LOG(...)
 	
 typedef enum ITEMS {
 	TOTAL				= 0,
@@ -40,14 +40,13 @@ enum LOCATIONS {
 #define PUNISHMENT_DELAY						10000
 
 MenuLayer *home_menu_layer;
-MenuIndex *p_NumWindowContext;
+MenuIndex *p_NumWindowContext = NULL;
 GBitmap 	*menu_icons[NUM_MENU_ICONS];
-GBitmap 	*game_icon;
+GBitmap 	*game_icon = NULL;
 
 // In-Game Variables
 int				value, X;
 double		Score, Y;
-short			Dice;
 bool			num_window_is_visible;
 uint8_t 	current_icon;
 uint8_t		menu_number = 0;
@@ -74,7 +73,7 @@ const short menu_header_heights[10] =
 	SUBTITLED_MENU_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT * 3	,
 	MENU_CELL_BASIC_HEADER_HT * 3 ,
-	SUBTITLED_MENU_HEADER_HT + 17	,
+	SUBTITLED_MENU_HEADER_HT + 19	,
 	MENU_CELL_BASIC_HEADER_HT * 4
 };
 
@@ -183,6 +182,7 @@ typedef struct {
 	short		CurrentCity;
 	short 	Damage;
 	short 	Day;
+	short		Dice;
 	short		MenuNumber;
 	short 	Health;
 	FinancialData Money;
@@ -214,7 +214,7 @@ void 	show_number_window_layer(void *);
 void 	hide_number_window_layer(void);
 void 	num_selected_callback(struct NumberWindow *, void *);
 
-MenuCallback p_MenuCallbackContext[2];
+MenuCallback p_MenuCallbackContext[2] = {NULL, NULL};
 
 // Pebble wrapper conditional functions
 void 	Num_Input(char *, int, int, int, int, MenuIndex *);
@@ -254,6 +254,6 @@ void 	menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const 
 //! @param icon Draws an icon to the left of the text.
 void 	menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
-char	*format;
-char	*string;
-char 	*confirm_header;
+char	*format = NULL;
+char	*string = NULL;
+char 	*confirm_header = NULL;
