@@ -23,6 +23,8 @@ enum LOCATIONS {
 };
 
 #define HIGH_SCORE_KEY							0
+#define PLAYER_SIZE_KEY							5
+#define PLAYER_DATA_KEY							10
 #define NUM_MENU_ICONS 							9
 #define MENU_CELL_BASIC_HT					17
 #define	MENU_CELL_BASIC_HEADER_HT		26
@@ -46,7 +48,6 @@ GBitmap 	*game_icon;
 int				value, X;
 double		Score, Y;
 short			Dice;
-short			CurrentCity;
 bool			num_window_is_visible;
 uint8_t 	current_icon;
 uint8_t		menu_number = 0;
@@ -155,11 +156,11 @@ typedef struct {
 } DRUGS;
 
 typedef struct {
-	int Capacity;
-	int Damage;
+	short Capacity;
+	short Damage;
+	short Quantity;
+	short Ammo;
 	int Price;
-	int Quantity;
-	int Ammo;
 	char *Name;
 } GUNS;
 
@@ -172,17 +173,23 @@ typedef struct {
 } Inventory;
 
 typedef struct {
-	double Balance;
-	double Cash;
-	double Debt;
+	long Balance;
+	long Cash;
+	long Debt;
 } FinancialData;
 
-Inventory Trenchcoat;
-FinancialData Money;
-int 	Health;
-int 	Damage;
-int 	Cops;
-int 	Day;
+typedef struct {
+	short 	Cops;
+	short		CurrentCity;
+	short 	Damage;
+	short 	Day;
+	short		MenuNumber;
+	short 	Health;
+	FinancialData Money;
+	Inventory Trenchcoat;
+} PLAYERDATA;
+
+PLAYERDATA Player;
 
 // In-Game functions
 typedef void						(*MenuCallback)(MenuIndex *);
@@ -195,11 +202,13 @@ void 	Doctor						(MenuIndex *);
 void 	Event_Generator		(MenuIndex *);
 void 	Exit							(MenuIndex *);
 void 	Game_Over					(MenuIndex *);
+void	Load_Game					(MenuIndex *);
 void 	Smoke_It					(MenuIndex *);
 void 	UpdateFreespace		(MenuIndex *);
 void 	Play_Again				(MenuIndex *);
 void 	BuyDrugs					(int32_t, MenuIndex *);
 void 	SellDrugs					(int32_t, MenuIndex *);
+void 	Save_Game					(void);
 void 	Show_Instructions	(void *);
 void 	show_number_window_layer(void *);
 void 	hide_number_window_layer(void);
