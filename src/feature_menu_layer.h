@@ -45,8 +45,8 @@ GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon = NULL;
 
 // In-Game Variables
-int				value, X;
-double		Score, Y;
+int				value, X, Y;
+uint32_t	Score;
 bool			num_window_is_visible;
 uint8_t 	current_icon;
 uint8_t		menu_number = 0;
@@ -149,44 +149,44 @@ const char* confirm_menu[2] =
 };
 
 typedef struct {
-	double Price;
-	int Quantity;
-	const char *Name;
+	uint32_t 			Price;
+	int 					Quantity;
+	const char 		*Name;
 } DRUGS;
 
 typedef struct {
-	short Capacity;
-	short Damage;
-	short Quantity;
-	short Ammo;
-	int Price;
-	char *Name;
+	uint16_t 			Capacity;
+	uint16_t 			Damage;
+	uint16_t 			Quantity;
+	uint16_t 			Ammo;
+	uint32_t 			Price;
+	char 					*Name;
 } GUNS;
 
 typedef struct {
-	int Price;
-	int Capacity;
-	int Freespace;
-	GUNS Guns[4];
-	DRUGS Drug[7];				
+	uint32_t 			Price;
+	uint32_t 			Capacity;
+	uint32_t 			Freespace;
+	GUNS 					Guns[4];
+	DRUGS 				Drug[7];				
 } Inventory;
 
 typedef struct {
-	long Balance;
-	long Cash;
-	long Debt;
+	uint32_t 			Balance;
+	uint32_t 			Cash;
+	uint32_t 			Debt;
 } FinancialData;
 
 typedef struct {
-	short 	Cops;
-	short		CurrentCity;
-	short 	Damage;
-	short 	Day;
-	short		Dice;
-	short		MenuNumber;
-	short 	Health;
+	uint16_t 			Cops;
+	uint16_t			CurrentCity;
+	uint16_t 			Damage;
+	uint16_t 			Day;
+	uint16_t			Dice;
+	uint16_t			MenuNumber;
+	uint16_t 			Health;
 	FinancialData Money;
-	Inventory Trenchcoat;
+	Inventory 		Trenchcoat;
 } PLAYERDATA;
 
 PLAYERDATA Player;
