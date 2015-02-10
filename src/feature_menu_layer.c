@@ -168,7 +168,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.32\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.33\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -1210,8 +1210,8 @@ int main(void)
 	app_event_loop();
 
 	free(p_NumWindowContext);
-	if (p_MenuCallbackContext[0] != NULL) free(p_MenuCallbackContext[0]);
-	if (p_MenuCallbackContext[1] != NULL) free(p_MenuCallbackContext[1]);
+	//if (p_MenuCallbackContext[0] != NULL) free(p_MenuCallbackContext[0]);
+	//if (p_MenuCallbackContext[1] != NULL) free(p_MenuCallbackContext[1]);
 	
 	destroy_ui();
 }
