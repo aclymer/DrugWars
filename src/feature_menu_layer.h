@@ -45,11 +45,10 @@ GBitmap 	*menu_icons[NUM_MENU_ICONS];
 GBitmap 	*game_icon = NULL;
 
 // In-Game Variables
-int				value, X, Y;
-uint32_t	Score;
+int				value, X, Y, Score;
 bool			num_window_is_visible;
-uint8_t 	current_icon;
-uint8_t		menu_number = 0;
+short 		current_icon;
+short			menu_number = 0;
 GFont 		header_font;
 GFont 		cell_font;
 GFont 		subtitle_font;
@@ -149,42 +148,42 @@ const char* confirm_menu[2] =
 };
 
 typedef struct {
-	uint32_t 			Price;
+	int 			Price;
 	int 					Quantity;
 	const char 		*Name;
 } DRUGS;
 
 typedef struct {
-	uint16_t 			Capacity;
-	uint16_t 			Damage;
-	uint16_t 			Quantity;
-	uint16_t 			Ammo;
-	uint32_t 			Price;
+	int 			Capacity;
+	int 			Damage;
+	int 			Quantity;
+	int 			Ammo;
+	int 			Price;
 	char 					*Name;
 } GUNS;
 
 typedef struct {
-	uint32_t 			Price;
-	uint32_t 			Capacity;
-	uint32_t 			Freespace;
-	GUNS 					Guns[4];
-	DRUGS 				Drug[7];				
+	int 			Price;
+	int 			Capacity;
+	int 			Freespace;
+	GUNS 			Guns[4];
+	DRUGS 		Drug[7];				
 } Inventory;
 
 typedef struct {
-	uint32_t 			Balance;
-	uint32_t 			Cash;
-	uint32_t 			Debt;
+	int 			Balance;
+	int 			Cash;
+	int 			Debt;
 } FinancialData;
 
 typedef struct {
-	uint16_t 			Cops;
-	uint16_t			CurrentCity;
-	uint16_t 			Damage;
-	uint16_t 			Day;
-	uint16_t			Dice;
-	uint16_t			MenuNumber;
-	uint16_t 			Health;
+	int 			Cops;
+	int			CurrentCity;
+	int 			Damage;
+	int 			Day;
+	int			Dice;
+	int			MenuNumber;
+	int 			Health;
 	FinancialData Money;
 	Inventory 		Trenchcoat;
 } PLAYERDATA;
@@ -206,8 +205,8 @@ void	Load_Game					(MenuIndex *);
 void 	Smoke_It					(MenuIndex *);
 void 	UpdateFreespace		(MenuIndex *);
 void 	Play_Again				(MenuIndex *);
-void 	BuyDrugs					(int32_t, MenuIndex *);
-void 	SellDrugs					(int32_t, MenuIndex *);
+void 	BuyDrugs					(int, MenuIndex *);
+void 	SellDrugs					(int, MenuIndex *);
 void 	Save_Game					(void);
 void 	Show_Instructions	(void *);
 void 	show_number_window_layer(void *);
@@ -233,7 +232,7 @@ void 	menu_header_simple_icon_draw(GContext *, const Layer *, const char *, cons
 // Menu Header Draw function for Icon, Title, and Subtitle
 void 	menu_header_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
-// Menu Header Draw function for long titles (multiple-lines)
+// Menu Header Draw function for titles (multiple-lines)
 void 	menu_header_long_draw(GContext *, const Layer *, const char *);
 
 // Menu Row Draw function for Title only

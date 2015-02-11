@@ -61,17 +61,17 @@ void Event_Generator(MenuIndex *cell_index)
 			string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000!") + 1) * sizeof(char));
 			snprintf(string,
 							 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000!") + 1) * sizeof(char),
-							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%lx!",
-							 (uint32_t) (Player.Money.Cash * 0.33333 + 0.5));
+							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i!",
+							 (unsigned int) (Player.Money.Cash * 0.33333 + 0.5));
 		}
 		else
 		{
 			string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char));
 			snprintf(string,
 							 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char),
-							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%lx AND %lx OF YOUR %s!",
-							 (uint32_t) (Player.Money.Cash * 0.33333 + 0.5),
-							 (uint32_t) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
+							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i AND %i OF YOUR %s!",
+							 (unsigned int) (Player.Money.Cash * 0.33333 + 0.5),
+							 (unsigned int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
 							 Player.Trenchcoat.Drug[X].Name);
 
 			Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5);
@@ -113,7 +113,7 @@ void Event_Generator(MenuIndex *cell_index)
 			strcat(confirm_header, Player.Trenchcoat.Guns[X].Name);
 			snprintf(confirm_header,
 							 ((strlen("WILL YOU BUY AMMO FOR YOU \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char)),
-							 (Player.Trenchcoat.Guns[X].Quantity > 0 ? "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%lx? " : "WILL YOU BUY A \n%s \n FOR $%lx? "),
+							 (Player.Trenchcoat.Guns[X].Quantity > 0 ? "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " : "WILL YOU BUY A \n%s \n FOR $%i? "),
 							 Player.Trenchcoat.Guns[X].Name,
 							 Player.Trenchcoat.Guns[X].Price);
 			p_MenuCallbackContext[0] = NULL;
@@ -180,7 +180,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.34\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.35\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -344,7 +344,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		// Trenchcoat Menu Header
 		case 2:
 		string = (char*)malloc((strlen("CAPACITY 999") + 1) * sizeof(char));
-		snprintf(string, ((strlen("CAPACITY 999") + 1) * sizeof(char)), "CAPACITY %lx", Player.Trenchcoat.Capacity);
+		snprintf(string, ((strlen("CAPACITY 999") + 1) * sizeof(char)), "CAPACITY %i", Player.Trenchcoat.Capacity);
 		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, string, menu_icons[Player.MenuNumber]);
 		free(string);
 		break;
@@ -593,7 +593,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			else
 			{
 				format = (char*)malloc((strlen("CARRY") + 1) * sizeof(char));
-				snprintf(format, (strlen("CARRY 999") + 1) * sizeof(char), "CARRY %lx",
+				snprintf(format, (strlen("CARRY 999") + 1) * sizeof(char), "CARRY %i",
 								 Player.Trenchcoat.Freespace);
 			}				
 			string = (char*)malloc((strlen("COCAINE\nYOU CAN AFFORD 999\nYOU HAVE 000") + 1) * sizeof(char));
@@ -682,7 +682,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				{			
 					string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
 					strcpy(string, "HOW MUCH TO PAY?");
-					uint32_t high = (Player.Money.Debt < (Player.Money.Cash - 100) ? Player.Money.Debt : Player.Money.Cash - 100);
+					unsigned int high = (Player.Money.Debt < (Player.Money.Cash - 100) ? Player.Money.Debt : Player.Money.Cash - 100);
 					uint8_t delta = EXP(LOG10(high) - 2);
 					Num_Input(string, high, 0, (delta > Player.Money.Debt ? Player.Money.Debt : delta), high, cell_index);
 					free(string);
@@ -749,15 +749,6 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					if (Player.Day == 31)
 						Game_Over(cell_index);
-					else if (Player.Money.Cash >= 1200 && Player.Damage > 0)
-					{
-						confirm_header = malloc((strlen("WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
-						strcpy(confirm_header, "WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?");
-						p_MenuCallbackContext[0] = NULL;
-						p_MenuCallbackContext[1] = &Doctor;
-						Player.MenuNumber = 9;
-						menu_layer_reload_data(home_menu_layer);	
-					}
 					else {
 						Player.Cops = 0;
 						break;
@@ -804,6 +795,15 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					}
 					UpdateFreespace(cell_index);
 				}
+			}
+			if (Player.Money.Cash >= 1200 && Player.Damage > 0)
+			{
+				confirm_header = malloc((strlen("WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
+				strcpy(confirm_header, "WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?");
+				p_MenuCallbackContext[0] = NULL;
+				p_MenuCallbackContext[1] = &Doctor;
+				Player.MenuNumber = 9;
+				menu_layer_reload_data(home_menu_layer);	
 			}
 			break;
 			
@@ -942,7 +942,7 @@ void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cel
   window_stack_push(number_window_get_window(number_window), true);
 }
 
-void BuyDrugs(int32_t howMany, MenuIndex *cell_index)
+void BuyDrugs(int howMany, MenuIndex *cell_index)
 {	
 	APP_LOG(APP_LOG_LEVEL_INFO,"Buying %li units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	+= howMany;
@@ -950,7 +950,7 @@ void BuyDrugs(int32_t howMany, MenuIndex *cell_index)
 	UpdateFreespace(cell_index);
 }
 
-void SellDrugs(int32_t howMany, MenuIndex *cell_index)
+void SellDrugs(int howMany, MenuIndex *cell_index)
 {
 	APP_LOG(APP_LOG_LEVEL_INFO,"Selling %li units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	-= howMany;
@@ -1094,20 +1094,20 @@ void Game_Over(MenuIndex *cell_index)
 {
 	Score = Player.Money.Balance - Player.Money.Debt;
 	if (Score <= 0) Score = 0;
-	uint32_t HighScore = (persist_exists(HIGH_SCORE_KEY) ? (uint32_t) persist_read_int(HIGH_SCORE_KEY) : Score);
+	int HighScore = (persist_exists(HIGH_SCORE_KEY) == true ? persist_read_int(HIGH_SCORE_KEY) : Score);
 	if (Score > HighScore)
 	{
 		HighScore = Score;
 		persist_write_int(HIGH_SCORE_KEY, HighScore);
 		string = (char*)malloc((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char));
 		snprintf(string, ((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char)),
-						 "GAME OVER!\n\nNEW HIGH SCORE:\n$%li", (long)Score);
+						 "GAME OVER!\n\nNEW HIGH SCORE:\n$%i", Score);
 	}
 	else
 	{
 		string = (char*)malloc((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char));
 		snprintf(string, ((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char)),
-						 "GAME OVER!\n\nHIGH SCORE:\n$%li\nYOUR SCORE:\n$%li", HighScore, (long)Score);
+						 "GAME OVER!\n\nHIGH SCORE:\n$%i\nYOUR SCORE:\n$%i", HighScore, Score);
 	}
 	toast_layer_show(message_layer, string, PUNISHMENT_DELAY, 0);
 	free(string);
@@ -1147,7 +1147,7 @@ void window_unload(Window *window)
 	menu_layer_destroy(home_menu_layer);
 
 	// Cleanup the menu icons
-	for (unsigned int i = 0; i < ARRAY_LENGTH(menu_icons); i++)
+	for (unsigned short int i = 0; i < ARRAY_LENGTH(menu_icons); i++)
 	{
 		gbitmap_destroy(menu_icons[i]);
 	}	
@@ -1275,7 +1275,7 @@ void floatstrcat(char* str, double val, int precision)
 			if (Y > 0)
 			{
 				Y *= 10;
-				*(str++) = '0' + (int) (Y + ((precision == 1) ? .5 : 0));
+				*(str++) = '0' + (int) (Y + ((precision == 1) ? 0.5 : 0));
 				Y -= (int) val;
 			}
 			else
