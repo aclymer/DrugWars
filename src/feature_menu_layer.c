@@ -12,7 +12,8 @@ void Event_Generator(MenuIndex *cell_index)
 {
 	Player.Dice = (rand() % 21);
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+	APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+	APP_LOG(APP_LOG_LEVEL_INFO, "Player Persist size: %i", persist_get_size(PLAYER_DATA_KEY));
 	
 	Player.Trenchcoat.Drug[COCAINE].Price 	= (rand() % 12001	+ 16000	)				;
 	Player.Trenchcoat.Drug[HEROINE].Price 	= (rand() % 7001	+ 5000	)				;
@@ -62,7 +63,7 @@ void Event_Generator(MenuIndex *cell_index)
 			snprintf(string,
 							 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000!") + 1) * sizeof(char),
 							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i!",
-							 (unsigned int) (Player.Money.Cash * 0.33333 + 0.5));
+							 (int) (Player.Money.Cash * 0.33333 + 0.5));
 		}
 		else
 		{
@@ -70,8 +71,8 @@ void Event_Generator(MenuIndex *cell_index)
 			snprintf(string,
 							 (strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char),
 							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i AND %i OF YOUR %s!",
-							 (unsigned int) (Player.Money.Cash * 0.33333 + 0.5),
-							 (unsigned int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
+							 (int) (Player.Money.Cash * 0.33333 + 0.5),
+							 (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
 							 Player.Trenchcoat.Drug[X].Name);
 
 			Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5);
@@ -126,8 +127,8 @@ void Event_Generator(MenuIndex *cell_index)
 		
 		case 14:
 		toast_layer_show(message_layer, "THERE'S SOME WEED HERE THAT SMELLS DANK!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);	
-		confirm_header = malloc((strlen("YOU WANNA SMOKE IT?") + 1) * sizeof(char));
-		strcpy(confirm_header, "WILL YOU SMOKE IT?");
+		confirm_header = malloc((strlen("WANNA SMOKE IT?") + 1) * sizeof(char));
+		strcpy(confirm_header, "WANNA SMOKE IT?");
 		p_MenuCallbackContext[0] = NULL;
 		p_MenuCallbackContext[1] = &Smoke_It;
 		Player.MenuNumber = 9;
@@ -138,7 +139,7 @@ void Event_Generator(MenuIndex *cell_index)
 		if (Player.Money.Cash >= 300)
 		{
 			confirm_header = malloc((strlen("WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?") + 1) * sizeof(char));
-			strcpy(confirm_header, "WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?");
+			snprintf(confirm_header, (strlen("WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?") + 1) * sizeof(char), "WILL YOU BUY A BIGGER TRENCHCOAT FOR $%i?", Player.Trenchcoat.Capacity * 2);
 			p_MenuCallbackContext[0] = NULL;
 			p_MenuCallbackContext[1] = Buy_Trenchcoat;
 			Player.MenuNumber = 9;
@@ -180,7 +181,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.35\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.36\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -682,7 +683,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				{			
 					string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
 					strcpy(string, "HOW MUCH TO PAY?");
-					unsigned int high = (Player.Money.Debt < (Player.Money.Cash - 100) ? Player.Money.Debt : Player.Money.Cash - 100);
+					int high = (Player.Money.Debt < (Player.Money.Cash - 100) ? Player.Money.Debt : Player.Money.Cash - 100);
 					uint8_t delta = EXP(LOG10(high) - 2);
 					Num_Input(string, high, 0, (delta > Player.Money.Debt ? Player.Money.Debt : delta), high, cell_index);
 					free(string);
@@ -944,7 +945,7 @@ void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cel
 
 void BuyDrugs(int howMany, MenuIndex *cell_index)
 {	
-	APP_LOG(APP_LOG_LEVEL_INFO,"Buying %li units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
+	APP_LOG(APP_LOG_LEVEL_INFO,"Buying %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	+= howMany;
 	Player.Money.Cash 																	-= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
@@ -952,7 +953,7 @@ void BuyDrugs(int howMany, MenuIndex *cell_index)
 
 void SellDrugs(int howMany, MenuIndex *cell_index)
 {
-	APP_LOG(APP_LOG_LEVEL_INFO,"Selling %li units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
+	APP_LOG(APP_LOG_LEVEL_INFO,"Selling %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	-= howMany;
 	Player.Money.Cash 																	+= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
@@ -1094,7 +1095,15 @@ void Game_Over(MenuIndex *cell_index)
 {
 	Score = Player.Money.Balance - Player.Money.Debt;
 	if (Score <= 0) Score = 0;
-	int HighScore = (persist_exists(HIGH_SCORE_KEY) == true ? persist_read_int(HIGH_SCORE_KEY) : Score);
+	int HighScore = 0;
+	if (persist_exists(HIGH_SCORE_KEY))
+		HighScore = persist_read_int(HIGH_SCORE_KEY);
+	else
+		persist_write_int(HIGH_SCORE_KEY, HighScore);
+	
+	APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+	APP_LOG(APP_LOG_LEVEL_INFO, "Score: %i HighScore: %i", Score, HighScore);
+	
 	if (Score > HighScore)
 	{
 		HighScore = Score;
@@ -1147,7 +1156,7 @@ void window_unload(Window *window)
 	menu_layer_destroy(home_menu_layer);
 
 	// Cleanup the menu icons
-	for (unsigned short int i = 0; i < ARRAY_LENGTH(menu_icons); i++)
+	for (unsigned int i = 0; i < ARRAY_LENGTH(menu_icons); i++)
 	{
 		gbitmap_destroy(menu_icons[i]);
 	}	
@@ -1228,7 +1237,7 @@ int main(void)
 	destroy_ui();
 }
 
-int LOG10(double val)
+int LOG10(int val)
 {
 	int count = 0;
 	val /= 10;

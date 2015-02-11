@@ -219,7 +219,7 @@ MenuCallback p_MenuCallbackContext[2] = {NULL, NULL};
 void 	Num_Input(char *, int, int, int, int, MenuIndex *);
 
 // App specific number functions
-int 	LOG10(double val);
+int 	LOG10(int val);
 int 	EXP(int val);
 void 	floatstrcat(char*, double, int);
 
