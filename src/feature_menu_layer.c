@@ -904,15 +904,6 @@ void window_load(Window *window)
 	// And also load the background
 	//menu_background = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_BRAINS);
 
-	// Now we prepare to initialize the menu layer
-	// We need the bounds to specify the menu layer's viewport size
-	// In this case, it'll be the same as the window's
-	Layer *window_layer = window_get_root_layer(window);
-	GRect bounds = layer_get_frame(window_layer);
-
-	// Create the menu layer
-	home_menu_layer = menu_layer_create(bounds);
-
 	// Set all the callbacks for the menu layer
 	menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
 													 {
@@ -927,8 +918,6 @@ void window_load(Window *window)
 	
 	// Bind the menu layer's click config provider to the window for interactivity
 	menu_layer_set_click_config_onto_window(home_menu_layer, window);
-	// Add it to the window for display
-	layer_add_child(window_layer, menu_layer_get_layer(home_menu_layer));
 }
 
 void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cell_index)
@@ -1136,6 +1125,31 @@ void Save_Game(void)
 	return;
 }
 
+static void Check_For_Saved_Game(void)
+{	
+	// Check for saved game
+	if (persist_exists(PLAYER_DATA_KEY))
+	{
+		persist_read_data(PLAYER_DATA_KEY, &Player, persist_read_int(PLAYER_SIZE_KEY));
+		if (Player.MenuNumber != 8)
+		{
+			value = Player.MenuNumber;
+			confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
+			snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
+
+			//TODO: set temp_callbacks for possible menu 8,9 loading plus add confirm_header to persist
+
+			p_MenuCallbackContext[0] = &Intro;
+			p_MenuCallbackContext[1] = &Load_Game;
+			Player.MenuNumber = 9;
+		}
+		
+		menu_layer_reload_data(home_menu_layer);
+	}
+	else
+		Intro(NULL);	
+}
+
 void Load_Game(MenuIndex *cell_index)
 {
 	if (value == 8)
@@ -1184,11 +1198,23 @@ void hide_number_window_layer(void)
   window_stack_pop(true);
 }
 
-int main(void)
-{		
-	srand(time(0));	
+static void create_ui(void)
+{
 	window = window_create();
 	p_NumWindowContext = malloc(sizeof(MenuCallback));
+	
+	// Now we prepare to initialize the menu layer
+	// We need the bounds to specify the menu layer's viewport size
+	// In this case, it'll be the same as the window's
+	Layer *window_layer = window_get_root_layer(window);
+	GRect bounds = layer_get_frame(window_layer);
+
+	// Create the menu layer
+	home_menu_layer = menu_layer_create(bounds);
+	
+	// Add it to the window for display
+	layer_add_child(window_layer, menu_layer_get_layer(home_menu_layer));
+
 	number_window = number_window_create(NULL, (NumberWindowCallbacks) 
 																			 {.selected 		= number_window_selected_callback,
 																				.incremented 	= number_window_incremented_callback,
@@ -1203,37 +1229,17 @@ int main(void)
 		.load = window_load,
 		.unload = window_unload,
 	});	
-
+	
 	window_stack_push(window, true);
-	
-	// Check for saved game
-	if (persist_exists(PLAYER_DATA_KEY))
-	{
-		persist_read_data(PLAYER_DATA_KEY, &Player, persist_read_int(PLAYER_SIZE_KEY));
-		if (Player.MenuNumber != 8)
-		{
-			value = Player.MenuNumber;
-			confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
-			snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
+}
 
-			//TODO: set temp_callbacks for possible menu 8,9 loading plus add confirm_header to persist
-
-			p_MenuCallbackContext[0] = &Intro;
-			p_MenuCallbackContext[1] = &Load_Game;
-			Player.MenuNumber = 9;
-		}
-		
-		menu_layer_reload_data(home_menu_layer);
-	}
-	else
-		Intro(NULL);	
-	
+int main(void)
+{		
+	srand(time(0));	
+	create_ui();
+	Check_For_Saved_Game();
 	app_event_loop();
-
 	free(p_NumWindowContext);
-	//if (p_MenuCallbackContext[0] != NULL) free(p_MenuCallbackContext[0]);
-	//if (p_MenuCallbackContext[1] != NULL) free(p_MenuCallbackContext[1]);
-	
 	destroy_ui();
 }
 
