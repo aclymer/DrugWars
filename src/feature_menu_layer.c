@@ -21,7 +21,8 @@ void Event_Generator(MenuIndex *cell_index)
 	Player.Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
 	Player.Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
 	Player.Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
-	//Player.Dice = 8;
+	
+	//Player.Dice = rand() % 4 + 9;
 	//Player.Dice++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
 	
@@ -80,6 +81,7 @@ void Event_Generator(MenuIndex *cell_index)
 		toast_layer_show(message_layer, string, PUNISHMENT_DELAY, menu_header_heights[Player.MenuNumber]);
 		free(string);
 		Player.Money.Cash -= (int) (Player.Money.Cash * 0.33333 + 0.5);
+		UpdateFreespace(cell_index);
 		break;
 		
 		case 9:
@@ -181,7 +183,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.36\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.38\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -233,18 +235,21 @@ void Intro(MenuIndex *cell_index)
 	Player.Trenchcoat.Guns[1].Damage					= 25;
 	Player.Trenchcoat.Guns[1].Capacity				= 7;
 	Player.Trenchcoat.Guns[1].Quantity				= 0;
+	Player.Trenchcoat.Guns[1].Ammo						= 0;
 	
 	Player.Trenchcoat.Guns[2].Name						= "44 MAGNUM";
 	Player.Trenchcoat.Guns[2].Price						= 400;
 	Player.Trenchcoat.Guns[2].Damage					= 25;
 	Player.Trenchcoat.Guns[2].Capacity				= 7;
 	Player.Trenchcoat.Guns[2].Quantity				= 0;
+	Player.Trenchcoat.Guns[2].Ammo						= 0;
 	
 	Player.Trenchcoat.Guns[3].Name						= "BARETTA 9MM";
 	Player.Trenchcoat.Guns[3].Price						= 500;
 	Player.Trenchcoat.Guns[3].Damage					= 25;
 	Player.Trenchcoat.Guns[3].Capacity				= 9;
 	Player.Trenchcoat.Guns[3].Quantity				= 0;
+	Player.Trenchcoat.Guns[3].Ammo						= 0;
 
 	UpdateFreespace(cell_index);
 	//app_timer_register(SHORT_MESSAGE_DELAY, Show_Instructions, cell_index);
@@ -752,7 +757,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						Game_Over(cell_index);
 					else {
 						Player.Cops = 0;
-						break;
+						//break;
 					}
 				}
 				else {
@@ -763,7 +768,8 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
 				}
 			}
-			if (cell_index->row == 4)	{
+			if (cell_index->row == 4)
+			{
 				if (Player.Trenchcoat.Guns[0].Quantity == 0)
 					toast_layer_show(message_layer, "YOU DON'T HAVE ANY GUNS!!!\nYOU HAVE TO RUN!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 				else if (Player.Trenchcoat.Guns[0].Ammo == 0)
@@ -775,6 +781,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 							break;
 					}
 					Player.Trenchcoat.Guns[X].Ammo--;
+					UpdateFreespace(cell_index);
 					X = rand() % 3 + 1;
 					if (X == 2)
 					{
@@ -794,17 +801,21 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU MISSED!!!\n\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 						app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Being_Shot, cell_index);
 					}
-					UpdateFreespace(cell_index);
 				}
 			}
-			if (Player.Money.Cash >= 1200 && Player.Damage > 0)
+			if (Player.Cops < 1 && Player.Money.Cash >= 1200 && Player.Damage > 0)
 			{
-				confirm_header = malloc((strlen("WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
-				strcpy(confirm_header, "WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?");
+				int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
+				APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i");
+				confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
+				snprintf(confirm_header,
+								 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
+								 "WILL YOU PAY $%i FOR A DOCTOR TO SEW YOU UP?",
+								max_meds);
 				p_MenuCallbackContext[0] = NULL;
 				p_MenuCallbackContext[1] = &Doctor;
 				Player.MenuNumber = 9;
-				menu_layer_reload_data(home_menu_layer);	
+				menu_layer_reload_data(home_menu_layer);
 			}
 			break;
 			
@@ -990,7 +1001,7 @@ void Being_Shot(MenuIndex *cell_index)
 			strcpy(format, "THEY MISSED!!!");		
 	else
 	{
-		Player.Damage += 3 + 3 * (int)(rand() % Player.Cops + 1);
+		Player.Damage += 3 + 3 * (int)(rand() % Player.Cops);
 		if (Player.Damage < 50)	
 			strcpy(format, "YOU'VE BEEN HIT!!!");	
 		else
@@ -1024,8 +1035,13 @@ void Cop_187(MenuIndex *cell_index)
 	free(string);
 	if (Player.Money.Cash >= 1200 && Player.Damage > 0)
 	{
-		confirm_header = malloc((strlen("WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
-		strcpy(confirm_header, "WILL YOU PAY $1000 FOR A DOCTOR TO SEW YOU UP?");
+		int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i");
+		confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
+		snprintf(confirm_header,
+						 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
+						 "WILL YOU PAY $%i FOR A DOCTOR TO SEW YOU UP?",
+						 max_meds);
 		p_MenuCallbackContext[0] = NULL;
 		p_MenuCallbackContext[1] = &Doctor;
 		Player.MenuNumber = 9;
@@ -1039,9 +1055,10 @@ void Cop_187(MenuIndex *cell_index)
 }
 
 void Doctor(MenuIndex *cell_index)
-{	
-	Player.Money.Cash -= 1000;
-	Player.Damage 			= 0;
+{
+	int max_meds = (Player.Money.Cash > Player.Damage * 1000 + 200 ? Player.Damage * 1000 : Player.Money.Cash);
+	Player.Money.Cash -= max_meds;
+	Player.Damage 		-= max_meds / 1000 + 0.5;
 }
 
 void Exit(MenuIndex *cell_index)
