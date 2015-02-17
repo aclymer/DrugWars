@@ -183,7 +183,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.38\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.39\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -240,7 +240,7 @@ void Intro(MenuIndex *cell_index)
 	Player.Trenchcoat.Guns[2].Name						= "44 MAGNUM";
 	Player.Trenchcoat.Guns[2].Price						= 400;
 	Player.Trenchcoat.Guns[2].Damage					= 25;
-	Player.Trenchcoat.Guns[2].Capacity				= 7;
+	Player.Trenchcoat.Guns[2].Capacity				= 6;
 	Player.Trenchcoat.Guns[2].Quantity				= 0;
 	Player.Trenchcoat.Guns[2].Ammo						= 0;
 	
@@ -1056,9 +1056,16 @@ void Cop_187(MenuIndex *cell_index)
 
 void Doctor(MenuIndex *cell_index)
 {
-	int max_meds = (Player.Money.Cash > Player.Damage * 1000 + 200 ? Player.Damage * 1000 : Player.Money.Cash);
-	Player.Money.Cash -= max_meds;
-	Player.Damage 		-= max_meds / 1000 + 0.5;
+	if (Player.Money.Cash > Player.Damage * 1000 + 200)
+	{
+	Player.Damage 		= 0;
+	Player.Money.Cash -= Player.Damage * 1000;
+	}
+	else
+	{
+	Player.Damage 		-= (int) ((Player.Money.Cash - 200) / 1000);
+	Player.Money.Cash = 200;
+	}
 }
 
 void Exit(MenuIndex *cell_index)
