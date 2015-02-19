@@ -110,7 +110,10 @@ void Event_Generator(MenuIndex *cell_index)
 		case 12:
 		case 13:
 		X = rand() % 3 + 1;
-		if (Player.Money.Cash >= Player.Trenchcoat.Guns[X].Price + 100 && Player.Trenchcoat.Freespace >= Player.Trenchcoat.Guns[X].Capacity)
+		// If there is room for ammo and the gun (if you don't already have the gun), then offer
+		if (Player.Money.Cash >= Player.Trenchcoat.Guns[X].Price + 200
+				&& Player.Trenchcoat.Freespace >= Player.Trenchcoat.Guns[X].Capacity
+				+ (Player.Trenchcoat.Guns[X].Quantity > 0 ? 0 : 5))
 		{
 			confirm_header = (char*)malloc((strlen("WILL YOU BUY AMMO FOR YOUR \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char));
 			strcat(confirm_header, Player.Trenchcoat.Guns[X].Name);
@@ -183,7 +186,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.39\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -237,7 +240,7 @@ void Intro(MenuIndex *cell_index)
 	Player.Trenchcoat.Guns[1].Quantity				= 0;
 	Player.Trenchcoat.Guns[1].Ammo						= 0;
 	
-	Player.Trenchcoat.Guns[2].Name						= "44 MAGNUM";
+	Player.Trenchcoat.Guns[2].Name						= ".44 MAGNUM";
 	Player.Trenchcoat.Guns[2].Price						= 400;
 	Player.Trenchcoat.Guns[2].Damage					= 25;
 	Player.Trenchcoat.Guns[2].Capacity				= 6;
@@ -1091,7 +1094,8 @@ void UpdateFreespace(MenuIndex *cell_index)
 	}	
 	Player.Trenchcoat.Freespace = Player.Trenchcoat.Capacity
 		- Player.Trenchcoat.Drug[TOTAL].Quantity
-		- Player.Trenchcoat.Guns[TOTAL].Ammo * Player.Trenchcoat.Guns[TOTAL].Quantity;
+		- Player.Trenchcoat.Guns[TOTAL].Ammo
+		- Player.Trenchcoat.Guns[TOTAL].Quantity * 5;
 }
 
 void Play_Again(MenuIndex *cell_index)
