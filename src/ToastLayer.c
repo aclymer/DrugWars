@@ -1,15 +1,16 @@
+#include "external_variables.h"
 #include "ToastLayer.h"
 
 ToastLayer* toast_layer_create(Window *parent)
 {
   ToastLayer *this = malloc(sizeof(ToastLayer));
-  
   this->parent = parent;
   this->parent_bounds = layer_get_bounds(window_get_root_layer(parent));
 	this->content_layer = text_layer_create(GRect(TOAST_LAYER_MARGIN, 168 + TOAST_LAYER_MARGIN, 144 - (2 * TOAST_LAYER_MARGIN), 168));
   this->bg_layer = text_layer_create(GRect(0, this->parent_bounds.size.h, 144, this->size.h + TOAST_LAYER_MARGIN));
   text_layer_set_font(this->content_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	text_layer_set_text_alignment(this->content_layer, GTextAlignmentCenter);
+	this->burnt_toast_layer = inverter_layer_create(layer_get_bounds(text_layer_get_layer(this->content_layer)));
   return this;
 }
 
@@ -17,6 +18,7 @@ void toast_layer_destroy(ToastLayer *this)
 {
   text_layer_destroy(this->bg_layer);
   text_layer_destroy(this->content_layer);
+	inverter_layer_destroy(this->burnt_toast_layer);
 	free(this);
 }
 
@@ -102,6 +104,9 @@ void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
 
     // Auto hide
     app_timer_register(this->duration, timer_callback, this);
+		
+		layer_add_child(text_layer_get_layer(this->content_layer), inverter_layer_get_layer(this->burnt_toast_layer));
+		layer_set_hidden(inverter_layer_get_layer(this->burnt_toast_layer), !(Settings.invert));
   }
 }
 

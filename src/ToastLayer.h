@@ -27,7 +27,7 @@ typedef struct {
 
   TextLayer *bg_layer;
   TextLayer *content_layer;
-
+	InverterLayer *burnt_toast_layer;
   char *content_buffer;
 } ToastLayer;
 

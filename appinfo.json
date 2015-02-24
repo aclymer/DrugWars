@@ -1,7 +1,13 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "Backlight": 3,
+        "Days": 4,
+        "Invert": 2,
+        "Vibrate": 1,
+        "version": 0
+    },
     "capabilities": [
-        ""
+        "configurable"
     ],
     "companyName": "A.Clymer",
     "longName": "Drug Wars",
@@ -82,7 +88,7 @@
     "shortName": "Drug Wars",
     "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
     "versionCode": 1,
-    "versionLabel": "1.40",
+    "versionLabel": "2.0",
     "watchapp": {
         "watchface": false
     }

@@ -1,9 +1,9 @@
+#include "external_variables.h"
 #include "feature_menu_layer.h"
-#include "instruction_layer.h"
 #include "ToastLayer.h"
 #include <time.h>
-#include <math.h>
-#include <stdarg.h>
+//#include <math.h>
+//#include <stdarg.h>
 
 Window 				*window;
 NumberWindow	*number_window;
@@ -56,6 +56,7 @@ void Event_Generator(MenuIndex *cell_index)
 		break;
 
 		case 8:
+		if (Settings.vibrate) vibes_short_pulse();
 		for (X = 1; X < 8; X++) 
 			if (Player.Trenchcoat.Drug[X].Quantity > 0) break;
 		if (X > 7)
@@ -92,7 +93,8 @@ void Event_Generator(MenuIndex *cell_index)
 			if (Player.Dice == 9)	Player.Cops = 1;
 			if (Player.Dice == 10)	Player.Cops = 3;
 			if (Player.Dice == 11)	Player.Cops = 4;
-
+			if (Settings.vibrate) vibes_double_pulse();
+			
 			string = (char*)malloc((strlen("OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char));
 			if (Player.Cops > 1)
 				snprintf(string, (strlen("OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char),
@@ -186,7 +188,14 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	toast_layer_show(message_layer, "MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string = %s", version);
+	string = malloc((strlen("MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char));
+	snprintf(string,
+					 (strlen("MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char),
+					 "MADE FOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",
+					 version);
+	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	free(string);
 	
 	Player.Cops																= 0;
 	Player.Health															= 50;
@@ -274,8 +283,8 @@ void Show_Instructions(void *data)
 	return;
 	confirm_header = malloc((strlen("WOULD YOU LIKE TO SEE THE INSTRUCTIONS?") + 1) * sizeof(char));
 	strcpy(confirm_header, "WOULD YOU LIKE TO SEE THE INSTRUCTIONS?");
-	p_MenuCallbackContext[0] = hide_instruction_layer;
-	p_MenuCallbackContext[1] = show_instruction_layer;
+	//p_MenuCallbackContext[0] = hide_instruction_layer;
+	//p_MenuCallbackContext[1] = show_instruction_layer;
 	Player.MenuNumber = 9;
 	menu_layer_reload_data(home_menu_layer);
 	APP_LOG(APP_LOG_LEVEL_INFO, "Showing Instructions...");
@@ -668,7 +677,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			Player.Money.Debt 		*= 1.1;
 			Player.Money.Balance *= 1.06;
 
-			if (Player.Day == 31)
+			if (Player.Day >= Settings.days)
 				Game_Over(cell_index);
 
 			Player.MenuNumber = 0;
@@ -750,13 +759,14 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			{
 				X = rand() % 3;
 				APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
-				if (X == 2)	{
+				if (X == 2)
+				{
 						Player.MenuNumber = 0;
 					if (Player.Cops < 2)
 						toast_layer_show(message_layer, "YOU LOST HIM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					else
 						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
-					if (Player.Day == 31)
+					if (Player.Day >= Settings.days)
 						Game_Over(cell_index);
 					else {
 						Player.Cops = 0;
@@ -809,7 +819,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			if (Player.Cops < 1 && Player.Money.Cash >= 1200 && Player.Damage > 0)
 			{
 				int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-				APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i");
+				APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
 				confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
 				snprintf(confirm_header,
 								 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
@@ -818,7 +828,6 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				p_MenuCallbackContext[0] = NULL;
 				p_MenuCallbackContext[1] = &Doctor;
 				Player.MenuNumber = 9;
-				menu_layer_reload_data(home_menu_layer);
 			}
 			break;
 			
@@ -833,7 +842,6 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 				p_MenuCallbackContext[1] = NULL;
 			}
 			APP_LOG(APP_LOG_LEVEL_INFO, (cell_index->row ? "YES" : "NO"));
-			menu_layer_reload_data(menu_layer);
 			break;
 			
 			default:
@@ -950,7 +958,7 @@ void BuyDrugs(int howMany, MenuIndex *cell_index)
 {	
 	APP_LOG(APP_LOG_LEVEL_INFO,"Buying %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	+= howMany;
-	Player.Money.Cash 																	-= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
+	Player.Money.Cash 																-= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
 }
 
@@ -958,7 +966,7 @@ void SellDrugs(int howMany, MenuIndex *cell_index)
 {
 	APP_LOG(APP_LOG_LEVEL_INFO,"Selling %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	-= howMany;
-	Player.Money.Cash 																	+= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
+	Player.Money.Cash 																+= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
 }
 
@@ -988,9 +996,10 @@ void Buy_Gun(MenuIndex *cell_index)
 
 void Smoke_It(MenuIndex *cell_index)
 {
-		toast_layer_show(message_layer, "YOU HALLUCINATE, STUMBLE ON TO THE TRACKS AND GET HIT BY A TRAIN!",
-										 LONG_MESSAGE_DELAY, menu_header_heights[0]);
-		app_timer_register(LONG_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Game_Over, cell_index);
+	if (Settings.vibrate) vibes_short_pulse();
+	toast_layer_show(message_layer, "YOU HALLUCINATE, STUMBLE ON TO THE TRACKS AND GET HIT BY A TRAIN!",
+									 LONG_MESSAGE_DELAY, menu_header_heights[0]);
+	app_timer_register(LONG_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Game_Over, cell_index);
 }
 
 void Being_Shot(MenuIndex *cell_index)
@@ -1012,6 +1021,7 @@ void Being_Shot(MenuIndex *cell_index)
 			strcpy(format, "YOU'VE BEEN KILLED!!!");
 			app_timer_register(SHORT_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Game_Over, cell_index);
 		}
+		if (Settings.vibrate) vibes_short_pulse();
 	}
 	
 	string = malloc((strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
@@ -1026,7 +1036,8 @@ void Being_Shot(MenuIndex *cell_index)
 }
 
 void Cop_187(MenuIndex *cell_index)
-{		
+{
+	if (Settings.vibrate) vibes_short_pulse();
 	X = (rand() % 1250 + 750);
 	Player.Money.Cash += X;
 	string = (char*)malloc((strlen("\nHOLY SHIT! YOU KILLED ALL OF THEM AND FOUND $2000 ON OFFICER HARDASS!!") + 1) * sizeof(char));
@@ -1039,7 +1050,7 @@ void Cop_187(MenuIndex *cell_index)
 	if (Player.Money.Cash >= 1200 && Player.Damage > 0)
 	{
 		int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i");
+		APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
 		confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
 		snprintf(confirm_header,
 						 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
@@ -1153,7 +1164,7 @@ void Save_Game(void)
 	return;
 }
 
-static void Check_For_Saved_Game(void)
+static void check_for_saved_game(void)
 {	
 	// Check for saved game
 	if (persist_exists(PLAYER_DATA_KEY))
@@ -1186,6 +1197,8 @@ void Load_Game(MenuIndex *cell_index)
 		Player.MenuNumber = 0;
 	
 	APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %i", sizeof(Player));
+	APP_LOG(APP_LOG_LEVEL_INFO, "Settings Size: %i", sizeof(Settings));
 	
 	menu_layer_reload_data(home_menu_layer);
 	
@@ -1217,7 +1230,7 @@ static void destroy_ui(void)
   window_destroy(window);
 	
 	// Save Player Data
-	if ( Player.Day < 31)
+	if ( Player.Day <= Settings.days)
 		Save_Game();
 }
 
@@ -1228,20 +1241,16 @@ void hide_number_window_layer(void)
 
 static void create_ui(void)
 {
-	window = window_create();
-	p_NumWindowContext = malloc(sizeof(MenuCallback));
+	window 							= window_create();
+	GRect bounds 				= layer_get_frame(window_get_root_layer(window));
+	inverter_layer 			= inverter_layer_create(bounds);
+	p_NumWindowContext 	= malloc(sizeof(MenuCallback));
 	
-	// Now we prepare to initialize the menu layer
-	// We need the bounds to specify the menu layer's viewport size
-	// In this case, it'll be the same as the window's
-	Layer *window_layer = window_get_root_layer(window);
-	GRect bounds = layer_get_frame(window_layer);
-
 	// Create the menu layer
 	home_menu_layer = menu_layer_create(bounds);
 	
 	// Add it to the window for display
-	layer_add_child(window_layer, menu_layer_get_layer(home_menu_layer));
+	layer_add_child(window_get_root_layer(window), menu_layer_get_layer(home_menu_layer));
 
 	number_window = number_window_create(NULL, (NumberWindowCallbacks) 
 																			 {.selected 		= number_window_selected_callback,
@@ -1253,20 +1262,109 @@ static void create_ui(void)
 	message_layer = toast_layer_create(window);
 
 	// Setup the window handlers
-	window_set_window_handlers(window, (WindowHandlers) {
-		.load = window_load,
-		.unload = window_unload,
-	});	
+	window_set_window_handlers(window, (WindowHandlers)
+														 {
+															.load = window_load,
+															.unload = window_unload,
+														 });	
+	if (persist_exists(SETTINGS_DATA_KEY))
+	{
+		persist_read_data(SETTINGS_DATA_KEY, &Settings, sizeof(SETTINGS_DATA));
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data exists...");
+	}
+	else
+	{
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data does not exist...");
+		Settings.vibrate 	= false;
+		Settings.invert		= false;
+		Settings.light		= false;
+		Settings.days			= NUM_DAYS[0];
+	}
 	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %i", sizeof(SETTINGS_DATA));
+	layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(inverter_layer));	
 	window_stack_push(window, true);
+}
+
+static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context)
+{
+	APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+	switch (key)
+	{		
+		case VIBRATE:
+		((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
+		break;
+
+		case INVERT:
+		((SETTINGS_DATA*) context)->invert = (bool) new_tuple->value->uint8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		set_invert_layer();
+		break;
+
+		case LIGHT:
+		((SETTINGS_DATA*) context)->light = (bool) new_tuple->value->uint8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		light_enable(Settings.light);
+		break;
+
+		case DAYS:
+		((SETTINGS_DATA*) context)->days = NUM_DAYS[new_tuple->value->uint8];
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+	}
+
+	persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
+}
+
+static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
+{
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary Result Error: %d", dict_error);
+}
+
+void check_version(void)
+{
+	version = malloc(5 * sizeof(char));
+	snprintf(version,
+					 5 * sizeof(char),
+					 "%i.%i",
+					 __pbl_app_info.process_version.major,
+					 __pbl_app_info.process_version.minor);
+	
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string = %s", version);
+	
+	Tuplet initial_values[5] = {
+		TupletCString(VERSION, version),
+		TupletInteger(VIBRATE, Settings.vibrate),
+		TupletInteger(INVERT, Settings.invert),	
+		TupletInteger(LIGHT, Settings.light),
+		TupletInteger(DAYS, (Settings.days == 15 ? 1 : (Settings.days == 45 ? 2 : (Settings.days == 60 ? 3 : 0))))
+	};
+	
+	app_message_open(128, 128);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %i", sizeof(initial_values));
+	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
+				  sync_tuple_changed_callback, sync_error_callback, &Settings);
+	
+	free(version);
+	return;
+}
+
+void set_invert_layer(void)
+{
+		layer_set_hidden(inverter_layer_get_layer(inverter_layer), !(Settings.invert));
 }
 
 int main(void)
 {		
 	srand(time(0));	
 	create_ui();
-	Check_For_Saved_Game();
+	check_version();
+	check_for_saved_game();
+	light_enable(Settings.light);
+	set_invert_layer();
 	app_event_loop();
+	app_message_deregister_callbacks();
 	free(p_NumWindowContext);
 	destroy_ui();
 }

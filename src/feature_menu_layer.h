@@ -1,15 +1,16 @@
 #include <pebble.h>
+#include <pebble_process_info.h>
 #undef APP_LOG
 #define APP_LOG(...)
-	
+
 typedef enum ITEMS {
-	TOTAL				= 0,
- 	COCAINE 		= 1,
- 	HEROINE 		= 2,
- 	ACID				= 3,
- 	WEED				= 4,
- 	SPEED				= 5,
-	LUDES				= 6,
+	TOTAL					= 0,
+ 	COCAINE 			= 1,
+ 	HEROINE 			= 2,
+ 	ACID					= 3,
+ 	WEED					= 4,
+ 	SPEED					= 5,
+	LUDES					= 6,
 } TRENCHCOAT_ITEMS;
 
 enum LOCATIONS {
@@ -22,7 +23,16 @@ enum LOCATIONS {
 		BROOKLYN     	= 6
 };
 
+enum KEYS {
+	VERSION					= 0,
+	VIBRATE					= 1,
+	INVERT					= 2,
+	LIGHT 					= 3,
+	DAYS						= 4
+};
+
 #define HIGH_SCORE_KEY							0
+#define SETTINGS_DATA_KEY						248
 #define PLAYER_SIZE_KEY							5
 #define PLAYER_DATA_KEY							10
 #define NUM_MENU_ICONS 							9
@@ -39,10 +49,18 @@ enum LOCATIONS {
 #define LONG_MESSAGE_DELAY					5000
 #define PUNISHMENT_DELAY						10000
 
-MenuLayer *home_menu_layer;
-MenuIndex *p_NumWindowContext = NULL;
-GBitmap 	*menu_icons[NUM_MENU_ICONS];
-GBitmap 	*game_icon = NULL;
+InverterLayer *inverter_layer;
+MenuLayer 		*home_menu_layer;
+MenuIndex 		*p_NumWindowContext = NULL;
+GBitmap 			*menu_icons[NUM_MENU_ICONS];
+GBitmap 			*game_icon = NULL;
+
+// Get app version info
+extern const PebbleProcessInfo __pbl_app_info;
+
+// AppSync setup
+AppSync sync;
+uint8_t sync_buffer[256];
 
 // In-Game Variables
 int				value, X, Y, Score;
@@ -54,11 +72,15 @@ GFont 		cell_font;
 GFont 		subtitle_font;
 GFont			confirm_font;
 
+// Basic Menu item type
 typedef struct {
 	const char *title;
 	const char *subtitle;
 } BasicItem;
 
+const short NUM_DAYS[4] = {30, 15, 45, 60};
+
+// Monetary unit designations
 const char postfix[4] = {'\0','K', 'M', 'B'};
 
 // Menu Header Heights
@@ -168,27 +190,28 @@ typedef struct {
 	int 			Freespace;
 	GUNS 			Guns[4];
 	DRUGS 		Drug[7];				
-} Inventory;
+} INVENTORY;
 
 typedef struct {
 	int 			Balance;
 	int 			Cash;
 	int 			Debt;
-} FinancialData;
+} FINANCIAL_DATA;
 
 typedef struct {
 	int 			Cops;
-	int			CurrentCity;
+	int				CurrentCity;
 	int 			Damage;
 	int 			Day;
-	int			Dice;
-	int			MenuNumber;
+	int				Dice;
+	int				MenuNumber;
 	int 			Health;
-	FinancialData Money;
-	Inventory 		Trenchcoat;
-} PLAYERDATA;
+	FINANCIAL_DATA Money;
+	INVENTORY Trenchcoat;
+} PLAYER_DATA;
 
-PLAYERDATA Player;
+PLAYER_DATA Player;
+SETTINGS_DATA Settings;
 
 // In-Game functions
 typedef void						(*MenuCallback)(MenuIndex *);
@@ -208,6 +231,7 @@ void 	Play_Again				(MenuIndex *);
 void 	BuyDrugs					(int, MenuIndex *);
 void 	SellDrugs					(int, MenuIndex *);
 void 	Save_Game					(void);
+void  set_invert_layer	(void);
 void 	Show_Instructions	(void *);
 void 	show_number_window_layer(void *);
 void 	hide_number_window_layer(void);
@@ -256,3 +280,4 @@ void 	menu_cell_draw(GContext *, const Layer *, const char *, const char *, cons
 char	*format = NULL;
 char	*string = NULL;
 char 	*confirm_header = NULL;
+char	*version = NULL;
