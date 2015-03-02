@@ -2,12 +2,16 @@
 #include "feature_menu_layer.h"
 #include "ToastLayer.h"
 #include <time.h>
-//#include <math.h>
-//#include <stdarg.h>
-
-Window 				*window;
-NumberWindow	*number_window;
+	
+static Window 				*window;
+static NumberWindow	*number_window;
 ToastLayer 		*message_layer;
+SETTINGS_DATA Settings;
+
+// AppSync setup
+static AppSync sync;
+static uint8_t sync_buffer[256];
+
 void Event_Generator(MenuIndex *cell_index)
 {
 	Player.Dice = (rand() % 21);
@@ -59,7 +63,7 @@ void Event_Generator(MenuIndex *cell_index)
 		if (Settings.vibrate) vibes_short_pulse();
 		for (X = 1; X < 8; X++) 
 			if (Player.Trenchcoat.Drug[X].Quantity > 0) break;
-		if (X > 7)
+		if (X > 7 || X == 0)
 		{
 			string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000!") + 1) * sizeof(char));
 			snprintf(string,
@@ -188,10 +192,9 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
 	Player.MenuNumber = 0;
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string = %s", version);
-	string = malloc((strlen("MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char));
+	string = malloc((strlen("MADE FOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char));
 	snprintf(string,
-					 (strlen("MADE FOR PEBBLE\nv1.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char),
+					 (strlen("MADE FOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char),
 					 "MADE FOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",
 					 version);
 	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
@@ -677,7 +680,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			Player.Money.Debt 		*= 1.1;
 			Player.Money.Balance *= 1.06;
 
-			if (Player.Day >= Settings.days)
+			if (Player.Day > Settings.days)
 				Game_Over(cell_index);
 
 			Player.MenuNumber = 0;
@@ -766,7 +769,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU LOST HIM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					else
 						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
-					if (Player.Day >= Settings.days)
+					if (Player.Day > Settings.days)
 						Game_Over(cell_index);
 					else {
 						Player.Cops = 0;
@@ -923,9 +926,6 @@ void window_load(Window *window)
 	subtitle_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_14));
 	confirm_font	= fonts_get_system_font(FONT_KEY_GOTHIC_24);
 	
-	// And also load the background
-	//menu_background = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_BRAINS);
-
 	// Set all the callbacks for the menu layer
 	menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
 													 {
@@ -1207,11 +1207,13 @@ void Load_Game(MenuIndex *cell_index)
 
 void window_unload(Window *window) 
 {	
-	// Destroy the menu layer
+	inverter_layer_destroy(inverter_layer);
+	toast_layer_destroy(message_layer);
+	number_window_destroy(number_window);
 	menu_layer_destroy(home_menu_layer);
 
 	// Cleanup the menu icons
-	for (unsigned int i = 0; i < ARRAY_LENGTH(menu_icons); i++)
+	for (unsigned int i = 0; i < NUM_MENU_ICONS; i++)
 	{
 		gbitmap_destroy(menu_icons[i]);
 	}	
@@ -1221,17 +1223,19 @@ void window_unload(Window *window)
 	fonts_unload_custom_font(header_font);
 	fonts_unload_custom_font(cell_font);
 	fonts_unload_custom_font(subtitle_font);
+	
+	free(p_NumWindowContext);
+	
+	// Save Player Data
+	if (Player.Day < Settings.days && Player.Day > 0)
+		Save_Game();
+	
+	app_sync_deinit(&sync);
 }
 
 static void destroy_ui(void)
 {
-	toast_layer_destroy(message_layer);
-	number_window_destroy(number_window);
   window_destroy(window);
-	
-	// Save Player Data
-	if ( Player.Day <= Settings.days)
-		Save_Game();
 }
 
 void hide_number_window_layer(void)
@@ -1288,12 +1292,17 @@ static void create_ui(void)
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context)
 {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 	switch (key)
-	{		
+	{
+		case VERSION:
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
+		version = malloc((strlen(new_tuple->value->cstring) + 1) * sizeof(char));
+		strcpy(version, new_tuple->value->cstring);
+		break;
+		
 		case VIBRATE:
 		((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 		break;
 
 		case INVERT:
@@ -1311,6 +1320,7 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 		case DAYS:
 		((SETTINGS_DATA*) context)->days = NUM_DAYS[new_tuple->value->uint8];
 		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		break;
 	}
 
 	persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
@@ -1318,20 +1328,16 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
 {
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary Result Error: %d", dict_error);
+  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "App Message Sync Error: %d", app_message_error);
+	app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Dictionary Result Error: %d", dict_error);
 }
 
 void check_version(void)
 {
+	APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
 	version = malloc(5 * sizeof(char));
-	snprintf(version,
-					 5 * sizeof(char),
-					 "%i.%i",
-					 __pbl_app_info.process_version.major,
-					 __pbl_app_info.process_version.minor);
-	
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string = %s", version);
+	snprintf(version, 5* sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
 	
 	Tuplet initial_values[5] = {
 		TupletCString(VERSION, version),
@@ -1341,12 +1347,11 @@ void check_version(void)
 		TupletInteger(DAYS, (Settings.days == 15 ? 1 : (Settings.days == 45 ? 2 : (Settings.days == 60 ? 3 : 0))))
 	};
 	
-	app_message_open(128, 128);
+	//app_message_open(144, 144);
 	APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %i", sizeof(initial_values));
 	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
 				  sync_tuple_changed_callback, sync_error_callback, &Settings);
 	
-	free(version);
 	return;
 }
 
@@ -1356,16 +1361,24 @@ void set_invert_layer(void)
 }
 
 int main(void)
-{		
+{
 	srand(time(0));	
 	create_ui();
-	check_version();
 	check_for_saved_game();
+	check_version();
 	light_enable(Settings.light);
 	set_invert_layer();
 	app_event_loop();
-	app_message_deregister_callbacks();
-	free(p_NumWindowContext);
+	app_message_deregister_callbacks();		
+	string = malloc(0);
+	format = malloc(0);
+	confirm_header = malloc(0);
+	version = malloc(0);
+	free(version);
+	free(string);
+	free(format);
+	free(confirm_header);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Length (string): %i (format): %i (confirm_header): %i (version): %i", sizeof(string), sizeof(format), sizeof(confirm_header), sizeof(version));
 	destroy_ui();
 }
 
@@ -1389,11 +1402,47 @@ int EXP(int val)
 	return temp;
 }
 
+void float2string(char *str, double val, short precision)
+{
+	str = malloc((3 + precision) * sizeof(char));
+	//  start with positive/negative
+	if (val < 0)
+	{
+		*(str++) = '-';
+		val = -val;
+	}
+	//  integer value
+	snprintf(str, 12, "%d", (int) val);
+	str += strlen(str);
+	val -= (int) val;
+	
+	//  decimals
+	if ((precision > 0) && (val >= .00001))
+	{
+		//  add period
+		*(str++) = '.';
+		//  loop through precision
+		for (;precision > 0; precision--)
+		{
+			if (val > 0)
+			{
+				val *= 10;
+				*(str++) = '0' + (int) (val + ((precision == 1) ? 0.5 : 0));
+				val -= (int) val;
+			}
+			else
+				break;
+		}
+	}
+	//  terminate
+	*str = '\0';	
+}
+
 void floatstrcat(char* str, double val, int precision)
 {
 	Y = val / EXP(LOG10(val) - LOG10(val) % 3);
 	if (precision > 3) precision = 3;
-	str += strlen(string);
+	str += strlen(str);
 	//  start with positive/negative
 	if (Y < 0)
 	{
@@ -1424,7 +1473,8 @@ void floatstrcat(char* str, double val, int precision)
 		}
 	}
 	// Add postfix unit
-	*(str++) = postfix[LOG10(val) / 3];
+	if ((int)(LOG10(val) / 3))
+		*(str++) = postfix[LOG10(val) / 3];
 	//  terminate
 	*str = '\0';	
 }
@@ -1441,7 +1491,7 @@ void menu_header_simple_draw(GContext* ctx, const Layer *cell_layer, const char 
 void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
   graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= bitmap->bounds;
+	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
 	GRect title_bounds 			= layer_get_bounds(cell_layer);
 	bitmap_bounds.origin.x 	+= 2;
 	bitmap_bounds.origin.y	= (title_bounds.size.h - bitmap_bounds.size.h) / 2;
@@ -1455,11 +1505,11 @@ void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const 
 void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
   graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 			= bitmap->bounds;
+	GRect bitmap_bounds 			= gbitmap_get_bounds(bitmap);
 	GRect title_bounds 				= layer_get_bounds(cell_layer);
-	GRect subtitle_bounds 		= layer_get_bounds(cell_layer);
+	GRect subtitle_bounds 		= title_bounds;
 	bitmap_bounds.origin.x 		+= 2;
-	bitmap_bounds.origin.y		= (title_bounds.size.h - bitmap->bounds.size.h) / 2 + 3;
+	bitmap_bounds.origin.y		= (title_bounds.size.h - bitmap_bounds.size.h) / 2 + 3;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
 	title_bounds.origin.x 		= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
 	title_bounds.origin.y			= ((layer_get_bounds(cell_layer).size.h - bitmap_bounds.size.h - 24) / 2);
@@ -1501,12 +1551,12 @@ void menu_cell_simple_centered_draw(GContext* ctx, const Layer *cell_layer, cons
 void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
   graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds = bitmap->bounds;
-	GRect titleOrigin = layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x = (24 - bitmap->bounds.size.w) / 2;
+	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
+	GRect titleOrigin 			= layer_get_bounds(cell_layer);
+	bitmap_bounds.origin.x 	= (24 - bitmap_bounds.size.w) / 2;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	titleOrigin.origin.x = 26;
-	titleOrigin.origin.y -= 3;
+	titleOrigin.origin.x 		= 26;
+	titleOrigin.origin.y 		-= 3;
   graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
@@ -1520,10 +1570,10 @@ void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const ch
 void menu_cell_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
   graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= bitmap->bounds;
+	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
 	GRect title_bounds 			= layer_get_bounds(cell_layer);
 	//GRect subtitle_bounds 	= layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x 	= (26 - bitmap->bounds.size.w) / 2;
+	bitmap_bounds.origin.x 	= (26 - bitmap_bounds.size.w) / 2;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
 	title_bounds.origin.x 	= 26;
 	title_bounds.origin.y 	-= 3;

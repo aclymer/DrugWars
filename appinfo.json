@@ -3,8 +3,8 @@
         "Backlight": 3,
         "Days": 4,
         "Invert": 2,
-        "Vibrate": 1,
-        "version": 0
+        "Version": 0,
+        "Vibrate": 1
     },
     "capabilities": [
         "configurable"
@@ -14,6 +14,11 @@
     "projectType": "native",
     "resources": {
         "media": [
+            {
+                "file": "images/Bank.png",
+                "name": "IMAGE_BANK_ICON",
+                "type": "png"
+            },
             {
                 "file": "images/DWPD.png",
                 "name": "IMAGE_DWPD_ICON",
@@ -27,11 +32,6 @@
             {
                 "file": "images/Shark.png",
                 "name": "IMAGE_LOAN_SHARK_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/Bank.png",
-                "name": "IMAGE_BANK_ICON",
                 "type": "png"
             },
             {
@@ -85,10 +85,11 @@
             }
         ]
     },
+    "sdkVersion": "2",
     "shortName": "Drug Wars",
     "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
     "versionCode": 1,
-    "versionLabel": "2.0",
+    "versionLabel": "2.1",
     "watchapp": {
         "watchface": false
     }

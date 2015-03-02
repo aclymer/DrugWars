@@ -2,7 +2,11 @@
 #include <pebble_process_info.h>
 #undef APP_LOG
 #define APP_LOG(...)
-
+	
+#ifndef PBL_PLATFORM_BASALT
+#define gbitmap_get_bounds(bitmap) bitmap->bounds;
+#endif
+	
 typedef enum ITEMS {
 	TOTAL					= 0,
  	COCAINE 			= 1,
@@ -57,10 +61,6 @@ GBitmap 			*game_icon = NULL;
 
 // Get app version info
 extern const PebbleProcessInfo __pbl_app_info;
-
-// AppSync setup
-AppSync sync;
-uint8_t sync_buffer[256];
 
 // In-Game Variables
 int				value, X, Y, Score;
@@ -211,10 +211,9 @@ typedef struct {
 } PLAYER_DATA;
 
 PLAYER_DATA Player;
-SETTINGS_DATA Settings;
 
-// In-Game functions
 typedef void						(*MenuCallback)(MenuIndex *);
+// In-Game functions
 void 	Intro							(MenuIndex *);
 void 	Being_Shot				(MenuIndex *);
 void 	Buy_Trenchcoat		(MenuIndex *);
@@ -245,7 +244,8 @@ void 	Num_Input(char *, int, int, int, int, MenuIndex *);
 // App specific number functions
 int 	LOG10(int val);
 int 	EXP(int val);
-void 	floatstrcat(char*, double, int);
+void	float2string(char *, double, short);
+void 	floatstrcat(char *, double, int);
 
 // Menu Header Draw function for Title only
 void 	menu_header_simple_draw(GContext *, const Layer *, const char *);
@@ -277,7 +277,7 @@ void 	menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const 
 //! @param icon Draws an icon to the left of the text.
 void 	menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
-char	*format = NULL;
-char	*string = NULL;
-char 	*confirm_header = NULL;
-char	*version = NULL;
+char	*format;
+char	*string;
+char 	*confirm_header;
+char	*version;
