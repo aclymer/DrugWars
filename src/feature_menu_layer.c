@@ -5,7 +5,7 @@
 	
 static Window 				*window;
 static NumberWindow	*number_window;
-ToastLayer 		*message_layer;
+ToastLayer 					*message_layer;
 SETTINGS_DATA Settings;
 
 // AppSync setup
@@ -1363,11 +1363,16 @@ void set_invert_layer(void)
 int main(void)
 {
 	srand(time(0));	
-	create_ui();
-	check_for_saved_game();
 	check_version();
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked Version...");
+	create_ui();
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");
+	check_for_saved_game();
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked for Saves...");
 	light_enable(Settings.light);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Light Enabled...");
 	set_invert_layer();
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Inverter Layer Set...");
 	app_event_loop();
 	app_message_deregister_callbacks();		
 	string = malloc(0);

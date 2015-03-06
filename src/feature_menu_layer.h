@@ -277,7 +277,7 @@ void 	menu_cell_simple_icon_draw(GContext *, const Layer *, const char *, const 
 //! @param icon Draws an icon to the left of the text.
 void 	menu_cell_draw(GContext *, const Layer *, const char *, const char *, const GBitmap *);
 
-char	*format;
-char	*string;
-char 	*confirm_header;
-char	*version;
+char	*format = NULL;
+char	*string = NULL;
+char 	*confirm_header = NULL;
+char	*version = "0.00";
