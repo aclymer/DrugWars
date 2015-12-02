@@ -1,34 +1,37 @@
 #include "external_variables.h"
+#include "instructions_layer.h"
 #include "feature_menu_layer.h"
 #include "ToastLayer.h"
-#include <time.h>
-	
-static Window 				*window;
+#include <math.h>
+
+static Window 		*window;
+static TextLayer	*number_window_value_text_layer;
+static TextLayer	*number_window_title_text_layer;
 static NumberWindow	*number_window;
-ToastLayer 					*message_layer;
-SETTINGS_DATA Settings;
+ToastLayer 			*message_layer;
+SETTINGS_DATA 		Settings;
+PLAYER_DATA 		Player;
 
 // AppSync setup
 static AppSync sync;
 static uint8_t sync_buffer[256];
 
+// Main Game Event Generation fxn
 void Event_Generator(MenuIndex *cell_index)
 {
 	Player.Dice = (rand() % 21);
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
-	APP_LOG(APP_LOG_LEVEL_INFO, "Player Persist size: %i", persist_get_size(PLAYER_DATA_KEY));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Player Persist size: %i", persist_get_size(PLAYER_DATA_KEY));
 	
-	Player.Trenchcoat.Drug[COCAINE].Price 	= (rand() % 12001	+ 16000	)				;
-	Player.Trenchcoat.Drug[HEROINE].Price 	= (rand() % 7001	+ 5000	)				;
-	Player.Trenchcoat.Drug[ACID].Price 			= (rand() % 35		+ 10		) * 100	;
-	Player.Trenchcoat.Drug[WEED].Price 			= (rand() % 43		+ 33		) * 10	;
-	Player.Trenchcoat.Drug[SPEED].Price	 		= (rand() % 16		+ 7			) * 10	;
-	Player.Trenchcoat.Drug[LUDES].Price	 		= (rand() % 5			+ 1			) * 10	;
+	Player.Trenchcoat.Drug[COCAINE].Price 	= (rand() % 12001	+ 16000	)		;
+	Player.Trenchcoat.Drug[HEROINE].Price 	= (rand() % 7001	+ 5000	)		;
+	Player.Trenchcoat.Drug[ACID].Price 		= (rand() % 35		+ 10	) * 100	;
+	Player.Trenchcoat.Drug[WEED].Price 		= (rand() % 43		+ 33	) * 10	;
+	Player.Trenchcoat.Drug[SPEED].Price	 	= (rand() % 16		+ 7		) * 10	;
+	Player.Trenchcoat.Drug[LUDES].Price	 	= (rand() % 5		+ 1		) * 10	;
 	
-	//Player.Dice = rand() % 4 + 9;
-	//Player.Dice++;
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Event_Generator - Dice: %i", Player.Dice);
 	
 	switch(Player.Dice)
 	{
@@ -61,9 +64,12 @@ void Event_Generator(MenuIndex *cell_index)
 
 		case 8:
 		if (Settings.vibrate) vibes_short_pulse();
-		for (X = 1; X < 8; X++) 
-			if (Player.Trenchcoat.Drug[X].Quantity > 0) break;
-		if (X > 7 || X == 0)
+		for (X = 1; X < 8; X++)
+		{
+			if (Player.Trenchcoat.Drug[X].Quantity > 0)
+				break;
+		}
+		if (X == 7)
 		{
 			string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000!") + 1) * sizeof(char));
 			snprintf(string,
@@ -71,7 +77,7 @@ void Event_Generator(MenuIndex *cell_index)
 							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i!",
 							 (int) (Player.Money.Cash * 0.33333 + 0.5));
 		}
-		else
+		else if (X < 7)
 		{
 			string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char));
 			snprintf(string,
@@ -79,7 +85,7 @@ void Event_Generator(MenuIndex *cell_index)
 							 "YOU WERE MUGGED IN THE SUBWAY!!!\nYOU LOST $%i AND %i OF YOUR %s!",
 							 (int) (Player.Money.Cash * 0.33333 + 0.5),
 							 (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
-							 Player.Trenchcoat.Drug[X].Name);
+							 drug_names[X]);
 
 			Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5);
 		}
@@ -122,11 +128,11 @@ void Event_Generator(MenuIndex *cell_index)
 				+ (Player.Trenchcoat.Guns[X].Quantity > 0 ? 0 : 5))
 		{
 			confirm_header = (char*)malloc((strlen("WILL YOU BUY AMMO FOR YOUR \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char));
-			strcat(confirm_header, Player.Trenchcoat.Guns[X].Name);
+			strcat(confirm_header, gun_names[X]);
 			snprintf(confirm_header,
 							 ((strlen("WILL YOU BUY AMMO FOR YOU \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char)),
 							 (Player.Trenchcoat.Guns[X].Quantity > 0 ? "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " : "WILL YOU BUY A \n%s \n FOR $%i? "),
-							 Player.Trenchcoat.Guns[X].Name,
+							 gun_names[X],
 							 Player.Trenchcoat.Guns[X].Price);
 			p_MenuCallbackContext[0] = NULL;
 			p_MenuCallbackContext[1] = &Buy_Gun;
@@ -152,7 +158,7 @@ void Event_Generator(MenuIndex *cell_index)
 			confirm_header = malloc((strlen("WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?") + 1) * sizeof(char));
 			snprintf(confirm_header, (strlen("WILL YOU BUY A BIGGER TRENCHCOAT FOR $200?") + 1) * sizeof(char), "WILL YOU BUY A BIGGER TRENCHCOAT FOR $%i?", Player.Trenchcoat.Capacity * 2);
 			p_MenuCallbackContext[0] = NULL;
-			p_MenuCallbackContext[1] = Buy_Trenchcoat;
+			p_MenuCallbackContext[1] = &Buy_Trenchcoat;
 			Player.MenuNumber = 9;
 			menu_layer_reload_data(home_menu_layer);
 		}
@@ -167,7 +173,7 @@ void Event_Generator(MenuIndex *cell_index)
 			snprintf(string,
 							 (strlen("YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!") + 1) * sizeof(char),
 							 "YOU FOUND %i UNITS OF %s\nON A DEAD DUDE IN THE SUBWAY!",
-							 Y, Player.Trenchcoat.Drug[X].Name
+							 Y, drug_names[X]
 							);				
 			toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 			free(string);
@@ -191,106 +197,88 @@ void Event_Generator(MenuIndex *cell_index)
 
 void Intro(MenuIndex *cell_index)
 {
+	//Tuplet Version[1] = {TupletCString(0, version)};
+	//int msg = app_sync_set(&sync, Version, 1);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "APP_MSG: %i", msg);
 	Player.MenuNumber = 0;
-	string = malloc((strlen("MADE FOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char));
-	snprintf(string,
-					 (strlen("MADE FOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char),
-					 "MADE FOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",
-					 version);
-	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+	string = malloc(( strlen("DRUGWARS\nFOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char));
+	snprintf(string, (strlen("DRUGWARS\nFOR PEBBLE\nv10.40\nBY A.CLYMER\n2015\nCOLORADO ,USA") + 1) * sizeof(char),
+					 "DRUGWARS\nFOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA", version);
+	toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, 0);
+	app_timer_register(SHORT_MESSAGE_DELAY, &Show_Instructions, NULL);
 	free(string);
 	
-	Player.Cops																= 0;
-	Player.Health															= 50;
-	Player.Day																= 1;
-	Player.CurrentCity												= BRONX;
-	Player.Damage															= 0;
+	Player.Cops									= 0;
+	Player.Health								= 50;
+	Player.Day									= 1;
+	Player.CurrentCity							= BRONX;
+	Player.Damage								= 0;
 	
-	Player.Money.Cash 												= 2000;
-	Player.Money.Balance											= 0;
-	Player.Money.Debt 												= 5000;
+	Player.Money.Cash 							= 2000;
+	Player.Money.Balance						= 0;
+	Player.Money.Debt 							= 5000;
 	
-	Player.Trenchcoat.Price										= 200;
-	Player.Trenchcoat.Capacity	 							= 100;
-	Player.Trenchcoat.Freespace								= 100;	
+	Player.Trenchcoat.Price						= 200;
+	Player.Trenchcoat.Capacity	 				= 100;
+	Player.Trenchcoat.Freespace					= 100;	
 	
-	Player.Trenchcoat.Drug[TOTAL].Name				= "TOTAL";
-	Player.Trenchcoat.Drug[TOTAL].Price				= 0;
+	Player.Trenchcoat.Drug[TOTAL].Price			= 0;
 	Player.Trenchcoat.Drug[TOTAL].Quantity		= 0;
 	
-	Player.Trenchcoat.Drug[COCAINE].Name			= "COCAINE";
-	Player.Trenchcoat.Drug[COCAINE].Price			= rand() % 12001 + 16000;
+	Player.Trenchcoat.Drug[COCAINE].Price		= rand() % 12001 + 16000;
 	Player.Trenchcoat.Drug[COCAINE].Quantity	= 0;
 	
-	Player.Trenchcoat.Drug[HEROINE].Name			= "HEROINE";
-	Player.Trenchcoat.Drug[HEROINE].Price			= rand() % 7001 + 5000;
+	Player.Trenchcoat.Drug[HEROINE].Price		= rand() % 7001 + 5000;
 	Player.Trenchcoat.Drug[HEROINE].Quantity	= 0;
 
-	Player.Trenchcoat.Drug[ACID].Name					= "ACID   ";
-	Player.Trenchcoat.Drug[ACID].Price				= (rand() % 33 + 10) * 100;
-	Player.Trenchcoat.Drug[ACID].Quantity			= 0;
+	Player.Trenchcoat.Drug[ACID].Price			= (rand() % 33 + 10) * 100;
+	Player.Trenchcoat.Drug[ACID].Quantity		= 0;
 
-	Player.Trenchcoat.Drug[WEED].Name					= "WEED   ";
-	Player.Trenchcoat.Drug[WEED].Price				= (rand() % 43 + 30) * 10;
-	Player.Trenchcoat.Drug[WEED].Quantity			= 0;
+	Player.Trenchcoat.Drug[WEED].Price			= (rand() % 43 + 30) * 10;
+	Player.Trenchcoat.Drug[WEED].Quantity		= 0;
 
-	Player.Trenchcoat.Drug[SPEED].Name				= "SPEED  ";
-	Player.Trenchcoat.Drug[SPEED].Price				= (rand() % 16 + 7) * 10;
+	Player.Trenchcoat.Drug[SPEED].Price			= (rand() % 16 + 7) * 10;
 	Player.Trenchcoat.Drug[SPEED].Quantity		= 0;
 
-	Player.Trenchcoat.Drug[LUDES].Name				= "LUDES  ";
-	Player.Trenchcoat.Drug[LUDES].Price				= (rand() % 5 + 1) * 10;
+	Player.Trenchcoat.Drug[LUDES].Price			= (rand() % 5 + 1) * 10;
 	Player.Trenchcoat.Drug[LUDES].Quantity		= 0;
 	
-	Player.Trenchcoat.Guns[TOTAL].Name				= "TOTAL";
 	Player.Trenchcoat.Guns[TOTAL].Quantity		= 0;
 	
-	Player.Trenchcoat.Guns[1].Name						= ".38 SPECIAL";
-	Player.Trenchcoat.Guns[1].Price						= 350;
-	Player.Trenchcoat.Guns[1].Damage					= 25;
-	Player.Trenchcoat.Guns[1].Capacity				= 7;
-	Player.Trenchcoat.Guns[1].Quantity				= 0;
-	Player.Trenchcoat.Guns[1].Ammo						= 0;
+	Player.Trenchcoat.Guns[1].Price				= 350;
+	Player.Trenchcoat.Guns[1].Damage			= 25;
+	Player.Trenchcoat.Guns[1].Capacity			= 7;
+	Player.Trenchcoat.Guns[1].Quantity			= 0;
+	Player.Trenchcoat.Guns[1].Ammo				= 0;
 	
-	Player.Trenchcoat.Guns[2].Name						= ".44 MAGNUM";
-	Player.Trenchcoat.Guns[2].Price						= 400;
-	Player.Trenchcoat.Guns[2].Damage					= 25;
-	Player.Trenchcoat.Guns[2].Capacity				= 6;
-	Player.Trenchcoat.Guns[2].Quantity				= 0;
-	Player.Trenchcoat.Guns[2].Ammo						= 0;
+	Player.Trenchcoat.Guns[2].Price				= 400;
+	Player.Trenchcoat.Guns[2].Damage			= 25;
+	Player.Trenchcoat.Guns[2].Capacity			= 6;
+	Player.Trenchcoat.Guns[2].Quantity			= 0;
+	Player.Trenchcoat.Guns[2].Ammo				= 0;
 	
-	Player.Trenchcoat.Guns[3].Name						= "BARETTA 9MM";
-	Player.Trenchcoat.Guns[3].Price						= 500;
-	Player.Trenchcoat.Guns[3].Damage					= 25;
-	Player.Trenchcoat.Guns[3].Capacity				= 9;
-	Player.Trenchcoat.Guns[3].Quantity				= 0;
-	Player.Trenchcoat.Guns[3].Ammo						= 0;
+	Player.Trenchcoat.Guns[3].Price				= 500;
+	Player.Trenchcoat.Guns[3].Damage			= 25;
+	Player.Trenchcoat.Guns[3].Capacity			= 9;
+	Player.Trenchcoat.Guns[3].Quantity			= 0;
+	Player.Trenchcoat.Guns[3].Ammo				= 0;
 
 	UpdateFreespace(cell_index);
-	//app_timer_register(SHORT_MESSAGE_DELAY, Show_Instructions, cell_index);
-/*
-	if (0)
-	{	
-		toast_layer_show(message_layer, "THIS IS A GAME OF BUYING AND SELLING. YOUR GOAL IS TO PAY- OFF YOUR DEBT TO THE LOAN SHARK, AND THEN MAKE AS");
-		toast_layer_show(message_layer, "MUCH MONEY AS POSSIBLE IN A 1 MONTH PERIOD. WATCH-OUT FOR THE POLICE IF YOU DEAL TOO HEAVILY!");
-		toast_layer_show(message_layer, "PRICES FOR DRUGS ARE: COCAINE: 15000-28000 HEROINE: 5000-12000 ACID: 1000-4200");
-		toast_layer_show(message_layer, "WEED: 300-720 SPEED: 70-220 LUDES: 10-50");				
-	}
-*/
+	Show_Instructions(NULL);
 	return;
 }
 
 // Display Instruction Layer
 void Show_Instructions(void *data)
 {
-	return;
 	confirm_header = malloc((strlen("WOULD YOU LIKE TO SEE THE INSTRUCTIONS?") + 1) * sizeof(char));
 	strcpy(confirm_header, "WOULD YOU LIKE TO SEE THE INSTRUCTIONS?");
-	//p_MenuCallbackContext[0] = hide_instruction_layer;
-	//p_MenuCallbackContext[1] = show_instruction_layer;
+	p_MenuCallbackContext[0] = NULL;
+	p_MenuCallbackContext[1] = &show_instructions_layer;
 	Player.MenuNumber = 9;
 	menu_layer_reload_data(home_menu_layer);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Showing Instructions...");
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Showing Instructions...");
+	return;
 }
 
 // A callback is used to specify the amount of sections of menu items
@@ -347,7 +335,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		// Main Menu Header
 		case 0:
 		if (Player.Day == 1)
-			menu_header_simple_icon_draw(ctx, cell_layer, "DRUG WARS", game_icon);
+			menu_header_simple_icon_draw(ctx, cell_layer, "DRUGWARS", game_icon);
 		else
 		{
 			string = (char*)malloc((strlen(" DAY 00") + 1) * sizeof(char));
@@ -359,14 +347,14 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 
 		// Prices Menu Header
 		case 1:
-		menu_header_simple_icon_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, menu_icons[Player.MenuNumber]);
+		menu_header_simple_icon_draw(ctx, cell_layer, menu_items[Player.MenuNumber], menu_icons[Player.MenuNumber]);
 		break;
 
 		// Trenchcoat Menu Header
 		case 2:
 		string = (char*)malloc((strlen("CAPACITY 999") + 1) * sizeof(char));
 		snprintf(string, ((strlen("CAPACITY 999") + 1) * sizeof(char)), "CAPACITY %i", Player.Trenchcoat.Capacity);
-		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, string, menu_icons[Player.MenuNumber]);
+		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber], string, menu_icons[Player.MenuNumber]);
 		free(string);
 		break;
 
@@ -402,7 +390,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		case 5:
 		string = (char*)malloc((strlen("STATEN ISLAND") + 1) * sizeof(char));
 		strcpy(string, locations[Player.CurrentCity]);
-		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, string, menu_icons[Player.MenuNumber]);
+		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber], string, menu_icons[Player.MenuNumber]);
 		free(string);
 		break;
 
@@ -416,7 +404,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		}
 		else
 			snprintf(string, ((strlen("DEBT $9.999K") + 1) * sizeof(char)), "%s%i", "DEBT $", (int)Player.Money.Debt);
-		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, string, menu_icons[Player.MenuNumber]);
+		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber], string, menu_icons[Player.MenuNumber]);
 		free(string);
 		break;
 
@@ -430,7 +418,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 		}
 		else
 			snprintf(string, ((strlen("BALANCE $9.999K") + 1) * sizeof(char)), "%s%i", "BALANCE $", (int)Player.Money.Balance);
-		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber].title, string, menu_icons[Player.MenuNumber]);
+		menu_header_draw(ctx, cell_layer, menu_items[Player.MenuNumber], string, menu_icons[Player.MenuNumber]);
 		free(string);
 		break;
 
@@ -455,20 +443,20 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data)
 {
 	int len = (strlen("9.999K") + 1) * sizeof(char);
+	strval = (char*)malloc(6 * sizeof(char));
 	switch(Player.MenuNumber)
 	{
 		// Draw Main Menu
 		default:
-		string = (char*)malloc( (strlen(menu_items[cell_index->row + 1].title) + 1) * sizeof(char));
-		snprintf(string, (strlen(menu_items[cell_index->row + 1].title) + 1) * sizeof(char), "%s", menu_items[cell_index->row + 1].title);
+		string = (char*)malloc( (strlen(menu_items[cell_index->row + 1]) + 1) * sizeof(char));
+		snprintf(string, (strlen(menu_items[cell_index->row + 1]) + 1) * sizeof(char), "%s", menu_items[cell_index->row + 1]);
 		break;
 
 		// Draw Prices Menu
 		case 1:
-		string = (char*)malloc((strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 9) * sizeof(char));
-		snprintf(string,((strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 9) * sizeof(char)), "%s  $%i",
-						 Player.Trenchcoat.Drug[cell_index->row].Name,
-						 (int) Player.Trenchcoat.Drug[cell_index->row].Price);
+		string = (char*)malloc((strlen(drug_names[cell_index->row]) + 1) * sizeof(char));
+		snprintf(string,((strlen(drug_names[cell_index->row]) + 1) * sizeof(char)), "%s", drug_names[cell_index->row]);
+		snprintf(strval, 7 * sizeof(char), "$%i", (int) Player.Trenchcoat.Drug[cell_index->row].Price);
 		break;
 
 		// Draw Trenchcoat Menu
@@ -477,23 +465,28 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		switch(cell_index->row)
 		{			
 			case 1:
-			snprintf(string, (strlen(trenchcoat_items[cell_index->row]) * sizeof(char)), trenchcoat_items[cell_index->row],	Player.Trenchcoat.Guns[0].Ammo);
+			strcpy(string, trenchcoat_items[1]);
+			snprintf(strval, (6 * sizeof(char)), "%2u",	Player.Trenchcoat.Guns[0].Ammo);
 			break;
 
 			case 2:
-			snprintf(string, ((strlen(trenchcoat_items[cell_index->row]) + 1) * sizeof(char)), trenchcoat_items[cell_index->row], Player.Damage);
+			strcpy(string, trenchcoat_items[2]);
+			snprintf(strval, 4 * sizeof(char), "%2i", Player.Damage);
 			break;
 
 			case 3:
-			snprintf(string, ((strlen(trenchcoat_items[cell_index->row]) + 1) * sizeof(char)), trenchcoat_items[cell_index->row], Player.Trenchcoat.Drug[TOTAL].Quantity);
+			strcpy(string, trenchcoat_items[3]);
+			snprintf(strval, 4 * sizeof(char), "%3i", Player.Trenchcoat.Drug[TOTAL].Quantity);
 			break;
 
 			case 4:
-			snprintf(string, ((strlen(trenchcoat_items[cell_index->row]) + 1) * sizeof(char)), trenchcoat_items[cell_index->row], Player.Trenchcoat.Guns[0].Quantity);
+			strcpy(string, trenchcoat_items[4]);
+			snprintf(strval, 4 * sizeof(char), "%1i", Player.Trenchcoat.Guns[0].Quantity);
 			break;
 
 			case 5:
-			snprintf(string, ((strlen(trenchcoat_items[cell_index->row]) + 1) * sizeof(char)), trenchcoat_items[cell_index->row], Player.Trenchcoat.Freespace);
+			strcpy(string, trenchcoat_items[5]);
+			snprintf(strval, 4 * sizeof(char), "%3u", Player.Trenchcoat.Freespace);
 			break;
 		}
 		
@@ -502,10 +495,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		// Draw Buy/Sell Menu
 		case 3:
 		case 4:
-		string = (char*)malloc((strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 10) * sizeof(char));
-		snprintf(string,((strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 10) * sizeof(char)), "%s     %u",
-						 Player.Trenchcoat.Drug[cell_index->row].Name,
-						 Player.Trenchcoat.Drug[cell_index->row].Quantity);
+		string = (char*)malloc((strlen(drug_names[cell_index->row]) + 11) * sizeof(char));
+		snprintf(string, ((strlen(drug_names[cell_index->row]) + 1) * sizeof(char)), "%s", drug_names[cell_index->row]);
+		snprintf(strval, 6 * sizeof(char), "%5u", Player.Trenchcoat.Drug[cell_index->row].Quantity);
 		break;
 
 		// Draw Subway Menu
@@ -567,22 +559,43 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		break;
 	}
 	
-	if (Player.MenuNumber > 0 && Player.MenuNumber < 8 && cell_index->row == 0)
-		menu_cell_simple_icon_draw(ctx, cell_layer, "BACK", menu_icons[0]);	
-	else if (Player.MenuNumber == 0)
-		menu_cell_simple_icon_draw(ctx, cell_layer, string, menu_icons[cell_index->row + 1]);
-	else if (Player.MenuNumber == 9)
-		menu_cell_simple_centered_draw(ctx, cell_layer, string);
-	else
-		menu_cell_simple_draw(ctx, cell_layer, string);
+	switch (Player.MenuNumber)
+	{
+		case 0:	menu_cell_simple_icon_draw(ctx, cell_layer, string, menu_icons[cell_index->row + 1]); break;
+		case 1:
+		case 2:
+		case 3:
+		case 4: 
+			if (cell_index->row == 0)
+			{
+				menu_cell_simple_icon_draw(ctx, cell_layer, "BACK", menu_icons[0]);
+				break;
+			}
+			else
+				menu_cell_value_draw(ctx, cell_layer, string, strval);
+		break;
+		case 9:
+				menu_cell_simple_centered_draw(ctx, cell_layer, string);
+		break;
+		default:
+			if (cell_index->row == 0)
+			{
+				menu_cell_simple_icon_draw(ctx, cell_layer, "BACK", menu_icons[0]);
+				break;
+			}
+			else
+				menu_cell_simple_draw(ctx, cell_layer, string);
+		break;
+	}
 	
+	free(strval);
 	free(string);
 }
 
 // Here we capture when a user selects a menu item
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data)
 {	
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "menu_select_layer(menu[%u], row[%i])", Player.MenuNumber, cell_index->row);
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "menu_select_layer(menu[%u], row[%i])", Player.MenuNumber, cell_index->row);
 	
 	if (Player.MenuNumber > 0 && Player.MenuNumber < 8 && cell_index->row == 0)
 	{
@@ -619,7 +632,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			}				
 			string = (char*)malloc((strlen("COCAINE\nYOU CAN AFFORD 999\nYOU HAVE 000") + 1) * sizeof(char));
 			snprintf(string, ((strlen("COCAINE\nYOU CAN AFFORD 999\nYOU HAVE 000") + 1) * sizeof(char)),
-							 "%s\nYOU CAN %s\nYOU HAVE %i", Player.Trenchcoat.Drug[cell_index->row].Name, format,
+							 "%s\nYOU CAN %s\nYOU HAVE %3i", drug_names[cell_index->row], format,
 							 Player.Trenchcoat.Drug[cell_index->row].Quantity);
 			toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 			free(format);
@@ -636,15 +649,15 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 					toast_layer_show(message_layer, "YOU CAN'T AFFORD THAT SHIT!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 				else
 				{
-					string = (char*)malloc((strlen("BUY HOW MUCH ") + strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 2) * sizeof(char));
-					strcpy(string, "BUY HOW MUCH ");
-					strcat(string, Player.Trenchcoat.Drug[cell_index->row].Name);
-					strcat(string, "?");
-					Num_Input(string, (Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price > Player.Trenchcoat.Freespace ?
+					//string = (char*)malloc((strlen("BUY HOW MUCH ") + strlen(drug_names[cell_index->row]) + 2) * sizeof(char));
+					//strcpy(string, "BUY HOW MUCH ");
+					//strcat(string, drug_names[cell_index->row]);
+					//strcat(string, "?");
+					Num_Input("BUY HOW MUCH?", (Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price > Player.Trenchcoat.Freespace ?
 														 Player.Trenchcoat.Freespace :
 														 Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price), 0, 1, 0, cell_index
 									 );
-					free(string);
+					//free(string);
 					return;
 				}
 			}
@@ -656,12 +669,12 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			{
 				if (Player.Trenchcoat.Drug[cell_index->row].Quantity > 0)
 				{
-					string = (char*)malloc((strlen("SELL HOW MUCH ") + strlen(Player.Trenchcoat.Drug[cell_index->row].Name) + 2) * sizeof(char));
-					strcpy(string, "SELL HOW MUCH ");
-					strcat(string, Player.Trenchcoat.Drug[cell_index->row].Name);
-					strcat(string, "?");
-					Num_Input(string, Player.Trenchcoat.Drug[cell_index->row].Quantity, 0, 1, 0, cell_index);
-					free(string);
+					//string = (char*)malloc((strlen("SELL HOW MUCH ") + strlen(drug_names[cell_index->row]) + 2) * sizeof(char));
+					//strcpy(string, "SELL HOW MUCH ");
+					//strcat(string, drug_names[cell_index->row]);
+					//strcat(string, "?");
+					Num_Input("SELL HOW MUCH?", Player.Trenchcoat.Drug[cell_index->row].Quantity, 0, 1, 0, cell_index);
+					//free(string);
 				}
 				else
 					toast_layer_show(message_layer, "YOU DON'T HAVE ANYTHING TO SELL!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
@@ -680,12 +693,14 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			Player.Money.Debt 		*= 1.1;
 			Player.Money.Balance *= 1.06;
 
-			if (Player.Day > Settings.days)
+			if (Player.Day > NUM_DAYS[Settings.days])
 				Game_Over(cell_index);
 
 			Player.MenuNumber = 0;
 			Event_Generator(cell_index);
 			menu_layer_set_selected_index(menu_layer, MenuIndex(0, 0), MenuRowAlignCenter, false);
+			if (Settings.autosave)
+				Save_Game();
 			break;
 			
 			// Loan Shark
@@ -694,19 +709,19 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			{
 				toast_layer_show(message_layer, "THE LOAN SHARK ONLY DEALS IN THE BRONX.", LONG_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 
-				APP_LOG(APP_LOG_LEVEL_DEBUG, "Current City: %i", Player.CurrentCity);
+				//APP_LOG(APP_LOG_LEVEL_DEBUG, "Current City: %i", Player.CurrentCity);
 				break;
 			}
 			else
 			{
 				if (cell_index->row == 1)
 				{			
-					string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
-					strcpy(string, "HOW MUCH TO PAY?");
+					//string = (char*)malloc((strlen("HOW MUCH TO PAY?") + 1) * sizeof(char));
+					//strcpy(string, "HOW MUCH TO PAY?");
 					int high = (Player.Money.Debt < (Player.Money.Cash - 100) ? Player.Money.Debt : Player.Money.Cash - 100);
 					uint8_t delta = EXP(LOG10(high) - 2);
-					Num_Input(string, high, 0, (delta > Player.Money.Debt ? Player.Money.Debt : delta), high, cell_index);
-					free(string);
+					Num_Input("HOW MUCH TO PAY?", high, 0, (delta > Player.Money.Debt ? Player.Money.Debt : delta), high, cell_index);
+					//free(string);
 				}
 				if (cell_index->row == 2)
 				{		
@@ -714,10 +729,10 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU THINK HE'S CRAZY BRO!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					else
 					{
-						string = (char*)malloc((strlen("HOW MUCH TO BORROW?") + 1) * sizeof(char));
-						strcpy(string, "HOW MUCH TO BORROW?");
-						Num_Input(string, 50000 - Player.Money.Debt, 0, (1000 > 50000 - Player.Money.Debt ? 50000 - Player.Money.Debt : 1000), 0, cell_index);
-						free(string);
+						//string = (char*)malloc((strlen("HOW MUCH TO BORROW?") + 1) * sizeof(char));
+						//strcpy(string, "HOW MUCH TO BORROW?");
+						Num_Input("HOW MUCH TO BORROW?", 50000 - Player.Money.Debt, 0, (1000 > 50000 - Player.Money.Debt ? 50000 - Player.Money.Debt : 1000), 0, cell_index);
+						//free(string);
 					}
 				}
 			}
@@ -725,12 +740,6 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 
 			// Bank Menu
 			case 7:
-			APP_LOG(APP_LOG_LEVEL_INFO, "Balance: %d LOG10(%d): %i EXP(LOG10(%d)): %d",
-							(int)Player.Money.Balance,
-							(int)Player.Money.Balance,
-							LOG10(Player.Money.Balance),
-							(int)Player.Money.Balance,
-							EXP(LOG10(Player.Money.Balance)));
 			if (Player.CurrentCity != BROOKLYN)
 			{
 				toast_layer_show(message_layer, "THE BANK IS IN BROOKLYN!!!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
@@ -740,17 +749,17 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			{
 				if (cell_index->row == 1)
 				{			
-					string = (char*)malloc((strlen("HOW MUCH TO WITHDRAW?") + 1) * sizeof(char));
-					strcpy(string, "HOW MUCH TO WITHDRAW?");
-					Num_Input(string, Player.Money.Balance, 0, EXP(LOG10(Player.Money.Balance) - 2), 0, cell_index);
-					free(string);
+					//string = (char*)malloc((strlen("HOW MUCH TO WITHDRAW?") + 1) * sizeof(char));
+					//strcpy(string, "HOW MUCH TO WITHDRAW?");
+					Num_Input("HOW MUCH TO WITHDRAW?", Player.Money.Balance, 0, EXP(LOG10(Player.Money.Balance) - 2) , 0, cell_index);
+					//free(string);
 				}
 				if (cell_index->row == 2)
 				{			
-					string = (char*)malloc((strlen("HOW MUCH TO DEPOSIT?") + 1) * sizeof(char));
-					strcpy(string, "HOW MUCH TO DEPOSIT?");
-					Num_Input(string, Player.Money.Cash, 0, EXP(LOG10(Player.Money.Cash) - 2), Player.Money.Cash / 2, cell_index);
-					free(string);
+					//string = (char*)malloc((strlen("HOW MUCH TO DEPOSIT?") + 1) * sizeof(char));
+					//strcpy(string, "HOW MUCH TO DEPOSIT?");
+					Num_Input("HOW MUCH TO DEPOSIT?", Player.Money.Cash, 0, EXP(LOG10(Player.Money.Cash / 2) - 2), Player.Money.Cash / 2, cell_index);
+					//free(string);
 				}
 			}
 			break;
@@ -761,7 +770,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			if (cell_index->row == 3)
 			{
 				X = rand() % 3;
-				APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
+				//APP_LOG(APP_LOG_LEVEL_DEBUG, "Chased rand() = %i", X);
 				if (X == 2)
 				{
 						Player.MenuNumber = 0;
@@ -769,7 +778,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 						toast_layer_show(message_layer, "YOU LOST HIM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
 					else
 						toast_layer_show(message_layer, "YOU LOST THEM IN AN ALLEY!!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
-					if (Player.Day > Settings.days)
+					if (Player.Day > NUM_DAYS[Settings.days])
 						Game_Over(cell_index);
 					else {
 						Player.Cops = 0;
@@ -822,7 +831,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			if (Player.Cops < 1 && Player.Money.Cash >= 1200 && Player.Damage > 0)
 			{
 				int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-				APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
+				//APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
 				confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
 				snprintf(confirm_header,
 								 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
@@ -835,16 +844,16 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 			break;
 			
 			case 9:
-			APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", confirm_header);
-			free(confirm_header);
+			//APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", confirm_header);
 			Player.MenuNumber = 0;
+			free(confirm_header);
 			if (p_MenuCallbackContext[cell_index->row] != NULL)
 			{
 				p_MenuCallbackContext[cell_index->row](cell_index);
 				p_MenuCallbackContext[0] = NULL;
 				p_MenuCallbackContext[1] = NULL;
 			}
-			APP_LOG(APP_LOG_LEVEL_INFO, (cell_index->row ? "YES" : "NO"));
+			//APP_LOG(APP_LOG_LEVEL_INFO, (cell_index->row ? "YES" : "NO"));
 			break;
 			
 			default:
@@ -854,6 +863,45 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 		
 		menu_layer_reload_data(menu_layer);
 	}
+}
+
+// This initializes the menu upon window load
+void window_load(Window *window)
+{
+	// Here we load the bitmap assets
+	// resource_init_current_app must be called before all asset loading
+	int num_menu_icons = 0;
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RETURN_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PRICES_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TRENCHCOAT_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SUBWAY_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOAN_SHARK_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANK_ICON);
+	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DWPD_ICON);
+	game_icon										 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
+	
+	// Load custom font	
+	header_font 	= fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_22));
+	cell_font 		= fonts_get_system_font(FONT_KEY_GOTHIC_24);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_18));
+	subtitle_font 	= fonts_get_system_font(FONT_KEY_GOTHIC_18);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_14));
+	confirm_font	= fonts_get_system_font(FONT_KEY_GOTHIC_24);
+	
+	// Set all the callbacks for the menu layer
+	menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
+													 {
+														 .get_num_sections 	= menu_get_num_sections_callback,
+														 .get_num_rows 		= menu_get_num_rows_callback,
+														 .get_header_height = menu_get_header_height_callback,
+														 .get_cell_height	= menu_get_cell_height_callback,
+														 .draw_header 		= menu_draw_header_callback,
+														 .draw_row 			= menu_draw_row_callback,
+														 .select_click 		= menu_select_callback,
+													 });
+	
+	// Bind the menu layer's click config provider to the window for interactivity
+	menu_layer_set_click_config_onto_window(home_menu_layer, window);
 }
 
 void number_window_selected_callback(struct NumberWindow *number_window, void *context)
@@ -897,76 +945,77 @@ void number_window_selected_callback(struct NumberWindow *number_window, void *c
 
 void number_window_incremented_callback(struct NumberWindow *number_window, void *context)
 {
-}
-
-void number_window_decremented_callback(struct NumberWindow *number_window, void *context)
-{
-}
-
-// This initializes the menu upon window load
-void window_load(Window *window)
-{
-	// Here we load the bitmap assets
-	// resource_init_current_app must be called before all asset loading
-	int num_menu_icons = 0;
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RETURN_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PRICES_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TRENCHCOAT_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SUBWAY_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOAN_SHARK_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANK_ICON);
-	menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DWPD_ICON);
-	game_icon										 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
+	int value = number_window_get_value(number_window);
 	
-	// Load custom font	
-	header_font 	= fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_22));
-	cell_font 		= fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_18));
-	subtitle_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_14));
-	confirm_font	= fonts_get_system_font(FONT_KEY_GOTHIC_24);
-	
-	// Set all the callbacks for the menu layer
-	menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
-													 {
-														 .get_num_sections 	= menu_get_num_sections_callback,
-														 .get_num_rows 			= menu_get_num_rows_callback,
-														 .get_header_height = menu_get_header_height_callback,
-														 .get_cell_height		= menu_get_cell_height_callback,
-														 .draw_header 			= menu_draw_header_callback,
-														 .draw_row 					= menu_draw_row_callback,
-														 .select_click 			= menu_select_callback,
-													 });
-	
-	// Bind the menu layer's click config provider to the window for interactivity
-	menu_layer_set_click_config_onto_window(home_menu_layer, window);
+	switch(Player.MenuNumber)
+	{
+		case 6:
+		case 7:
+			memset(number_window_value_text, 0, 10 * sizeof(char));
+			if (value > 9999)
+			{
+				*(number_window_value_text) = '$';
+				floatstrcat(number_window_value_text, value, 3);
+			}
+			else
+			{
+				snprintf(number_window_value_text, 10 * sizeof(char), "$%i", value);
+			}
+			text_layer_set_text(number_window_value_text_layer, number_window_value_text);
+		break;
+		default:
+			memset(number_window_value_text, 0, 10 * sizeof(char));
+			if (value > 9999)
+			{
+				*(number_window_value_text) = 32;
+				floatstrcat(number_window_value_text, value, 3);
+			}
+			else
+			{
+				snprintf(number_window_value_text, 10 * sizeof(char), "%i", value);
+			}
+			text_layer_set_text(number_window_value_text_layer, number_window_value_text);
+		break;
+	}
 }
 
 void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cell_index)
 {
-	*p_NumWindowContext = *cell_index;
-	number_window_set_label(number_window, text);
+	*p_NumWindowContext 		= *cell_index;
+	text_layer_set_text(number_window_title_text_layer, text);	
 	number_window_set_max(number_window, high);
 	number_window_set_min(number_window, low);
 	number_window_set_step_size(number_window, delta);
 	number_window_set_value(number_window, set);
+	number_window_incremented_callback(number_window, (void*)cell_index);	
+	
+#ifdef PBL_PLATFORM_APLITE
 	window_set_status_bar_icon(number_window_get_window(number_window), menu_icons[Player.MenuNumber]);
-  window_stack_push(number_window_get_window(number_window), true);
+#endif
+	
+	Window *number_window_root = number_window_get_window(number_window);
+	Layer *number_window_root_layer = window_get_root_layer(number_window_root);
+	
+	layer_add_child(number_window_root_layer, text_layer_get_layer(number_window_title_text_layer));
+	layer_add_child(number_window_root_layer, text_layer_get_layer(number_window_value_text_layer));
+	
+	window_set_background_color(number_window_root, GColorLimerick);
+	window_stack_push(number_window_root, true);
 }
 
 void BuyDrugs(int howMany, MenuIndex *cell_index)
 {	
-	APP_LOG(APP_LOG_LEVEL_INFO,"Buying %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
+	//APP_LOG(APP_LOG_LEVEL_INFO,"Buying %i units of %s", howMany, drug_names[cell_index->row]);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	+= howMany;
-	Player.Money.Cash 																-= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
+	Player.Money.Cash 									-= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
 }
 
 void SellDrugs(int howMany, MenuIndex *cell_index)
 {
-	APP_LOG(APP_LOG_LEVEL_INFO,"Selling %i units of %s", howMany, Player.Trenchcoat.Drug[cell_index->row].Name);
+	//APP_LOG(APP_LOG_LEVEL_INFO,"Selling %i units of %s", howMany, drug_names[cell_index->row]);
 	Player.Trenchcoat.Drug[cell_index->row].Quantity 	-= howMany;
-	Player.Money.Cash 																+= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
+	Player.Money.Cash 									+= howMany * Player.Trenchcoat.Drug[cell_index->row].Price;
 	UpdateFreespace(cell_index);
 }
 
@@ -1026,7 +1075,7 @@ void Being_Shot(MenuIndex *cell_index)
 	
 	string = malloc((strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char));
 	if (Player.Cops < 2)
-		snprintf(string, (strlen("HE'S FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "HE'S' FIRING AT YOU!!!\n%s", format);
+		snprintf(string, (strlen("HE'S FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "HE'S FIRING AT YOU!!!\n%s", format);
 	else
 		snprintf(string, (strlen("THEY'RE FIRING AT YOU!!!\nYOU'VE BEEN KILLED!!!") + 1) * sizeof(char), "THEY'RE FIRING AT YOU!!!\n%s", format);
 	free(format);
@@ -1050,7 +1099,7 @@ void Cop_187(MenuIndex *cell_index)
 	if (Player.Money.Cash >= 1200 && Player.Damage > 0)
 	{
 		int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Damage: %i Max Meds: $%i", Player.Damage, max_meds);
 		confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
 		snprintf(confirm_header,
 						 (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
@@ -1111,8 +1160,8 @@ void UpdateFreespace(MenuIndex *cell_index)
 
 void Play_Again(MenuIndex *cell_index)
 {
-	confirm_header = malloc((strlen("\n\nPLAY AGAIN?") + 1) * sizeof(char));
-	strcpy(confirm_header, "PLAY AGAIN?");
+	confirm_header = malloc((strlen("\nPLAY AGAIN?") + 1) * sizeof(char));
+	strcpy(confirm_header, "\nPLAY AGAIN?");
 	Player.MenuNumber = 9;
 	p_MenuCallbackContext[0] = &Exit;
 	p_MenuCallbackContext[1] = &Intro;
@@ -1123,19 +1172,19 @@ void Game_Over(MenuIndex *cell_index)
 {
 	Score = Player.Money.Balance - Player.Money.Debt;
 	if (Score <= 0) Score = 0;
-	int HighScore = 0;
 	if (persist_exists(HIGH_SCORE_KEY))
-		HighScore = persist_read_int(HIGH_SCORE_KEY);
+		persist_read_data(HIGH_SCORE_KEY, &high_scores, sizeof(high_scores));
 	else
-		persist_write_int(HIGH_SCORE_KEY, HighScore);
+		persist_write_data(HIGH_SCORE_KEY, high_scores, sizeof(high_scores));
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
-	APP_LOG(APP_LOG_LEVEL_INFO, "Score: %i HighScore: %i", Score, HighScore);
+	psleep(40);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Score: %i HighScore: %i", Score, high_scores[Settings.days]);
 	
-	if (Score > HighScore)
+	if (Score > high_scores[Settings.days])
 	{
-		HighScore = Score;
-		persist_write_int(HIGH_SCORE_KEY, HighScore);
+		high_scores[Settings.days] = Score;
+		persist_write_data(HIGH_SCORE_KEY, high_scores, sizeof(high_scores));
 		string = (char*)malloc((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char));
 		snprintf(string, ((strlen("GAME OVER!\n\nNEW HIGH SCORE:\n$9999999999") + 1) * sizeof(char)),
 						 "GAME OVER!\n\nNEW HIGH SCORE:\n$%i", Score);
@@ -1144,7 +1193,7 @@ void Game_Over(MenuIndex *cell_index)
 	{
 		string = (char*)malloc((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char));
 		snprintf(string, ((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char)),
-						 "GAME OVER!\n\nHIGH SCORE:\n$%i\nYOUR SCORE:\n$%i", HighScore, Score);
+						 "GAME OVER!\n\nHIGH SCORE:\n$%i\nYOUR SCORE:\n$%i", high_scores[Settings.days], Score);
 	}
 	toast_layer_show(message_layer, string, PUNISHMENT_DELAY, 0);
 	free(string);
@@ -1159,8 +1208,10 @@ void Game_Over(MenuIndex *cell_index)
 void Save_Game(void)
 {
 	persist_write_data(PLAYER_DATA_KEY, &Player, sizeof(Player));
+	psleep(100);
 	persist_write_int(PLAYER_SIZE_KEY, sizeof(Player));
-	APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %i", sizeof(Player));
+	psleep(100);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %u", sizeof(Player));
 	return;
 }
 
@@ -1175,9 +1226,6 @@ static void check_for_saved_game(void)
 			value = Player.MenuNumber;
 			confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
 			snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
-
-			//TODO: set temp_callbacks for possible menu 8,9 loading plus add confirm_header to persist
-
 			p_MenuCallbackContext[0] = &Intro;
 			p_MenuCallbackContext[1] = &Load_Game;
 			Player.MenuNumber = 9;
@@ -1196,9 +1244,9 @@ void Load_Game(MenuIndex *cell_index)
 	else
 		Player.MenuNumber = 0;
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %i", sizeof(Player));
-	APP_LOG(APP_LOG_LEVEL_INFO, "Settings Size: %i", sizeof(Settings));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %u", sizeof(Player));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Settings Size: %u", sizeof(Settings));
 	
 	menu_layer_reload_data(home_menu_layer);
 	
@@ -1206,8 +1254,10 @@ void Load_Game(MenuIndex *cell_index)
 }
 
 void window_unload(Window *window) 
-{	
+{
+#ifdef PBL_PLATFORM_APLITE
 	inverter_layer_destroy(inverter_layer);
+#endif
 	toast_layer_destroy(message_layer);
 	number_window_destroy(number_window);
 	menu_layer_destroy(home_menu_layer);
@@ -1218,17 +1268,15 @@ void window_unload(Window *window)
 		gbitmap_destroy(menu_icons[i]);
 	}	
 	gbitmap_destroy(game_icon);
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Crash is after this...");
 		
-	// Unload Custom Fonts
-	fonts_unload_custom_font(header_font);
-	fonts_unload_custom_font(cell_font);
-	fonts_unload_custom_font(subtitle_font);
-	
 	free(p_NumWindowContext);
-	
 	// Save Player Data
-	if (Player.Day < Settings.days && Player.Day > 0)
+	if (Player.Day < NUM_DAYS[Settings.days] && Player.Day > 1)
 		Save_Game();
+	
+	if (Player.Day > NUM_DAYS[Settings.days] || Player.Damage >= 50)
+		persist_delete(PLAYER_DATA_KEY);
 	
 	app_sync_deinit(&sync);
 }
@@ -1238,43 +1286,61 @@ static void destroy_ui(void)
   window_destroy(window);
 }
 
-void hide_number_window_layer(void)
-{
-  window_stack_pop(true);
-}
-
 static void create_ui(void)
 {
-	window 							= window_create();
-	GRect bounds 				= layer_get_frame(window_get_root_layer(window));
-	inverter_layer 			= inverter_layer_create(bounds);
+	window 				= window_create();
+
+	window_set_background_color(window, GColorLimerick);
+	
+	GRect bounds 		= layer_get_frame(window_get_root_layer(window));
+	
+	inverter_layer 		= inverter_layer_create(bounds);
+	
 	p_NumWindowContext 	= malloc(sizeof(MenuCallback));
 	
 	// Create the menu layer
-	home_menu_layer = menu_layer_create(bounds);
+	home_menu_layer 	= menu_layer_create(bounds);
+	menu_layer_pad_bottom_enable(home_menu_layer, false);
+	menu_layer_set_normal_colors(home_menu_layer, GColorCeleste, GColorLimerick);
+	menu_layer_set_highlight_colors(home_menu_layer, GColorLimerick, GColorWhite);
 	
 	// Add it to the window for display
 	layer_add_child(window_get_root_layer(window), menu_layer_get_layer(home_menu_layer));
 
-	number_window = number_window_create(NULL, (NumberWindowCallbacks) 
-																			 {.selected 		= number_window_selected_callback,
-																				.incremented 	= number_window_incremented_callback,
-																				.decremented 	= number_window_decremented_callback
-																			 }, p_NumWindowContext);
+	number_window 		= number_window_create(NULL, (NumberWindowCallbacks) 
+										 {.selected 	= number_window_selected_callback,
+										  .incremented 	= number_window_incremented_callback,
+										  .decremented 	= number_window_incremented_callback
+										 }, p_NumWindowContext);
+	
+	// Create Number window title text overlay
+	number_window_title_text_layer		= text_layer_create(GRect(0,10,115,133));
+	text_layer_set_background_color(number_window_title_text_layer, GColorLimerick);
+	text_layer_set_font(number_window_title_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	text_layer_set_text_alignment(number_window_title_text_layer, GTextAlignmentCenter);
+	
+	// Create Number window value text overlay
+	number_window_value_text_layer = text_layer_create(GRect(0,70,115,60));
+	text_layer_set_background_color(number_window_value_text_layer, GColorLimerick);
+	text_layer_set_font(number_window_value_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+	text_layer_set_text_alignment(number_window_value_text_layer, GTextAlignmentCenter);
+		
+	number_window_value_text 	= malloc(10 * sizeof(char));
 	
 	// Create message layer
-	message_layer = toast_layer_create(window);
+	message_layer 		= toast_layer_create(window);
 
 	// Setup the window handlers
 	window_set_window_handlers(window, (WindowHandlers)
-														 {
-															.load = window_load,
-															.unload = window_unload,
-														 });	
+							   {
+								   .load = window_load,
+								   .unload = window_unload,
+							   });
+	
 	if (persist_exists(SETTINGS_DATA_KEY))
 	{
 		persist_read_data(SETTINGS_DATA_KEY, &Settings, sizeof(SETTINGS_DATA));
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data exists...");
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data exists...");
 	}
 	else
 	{
@@ -1282,11 +1348,15 @@ static void create_ui(void)
 		Settings.vibrate 	= false;
 		Settings.invert		= false;
 		Settings.light		= false;
-		Settings.days			= NUM_DAYS[0];
+		Settings.days		= 0;
 	}
 	
-	APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %i", sizeof(SETTINGS_DATA));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %u", sizeof(SETTINGS_DATA));
+	
+#ifdef PBL_PLATFORM_APLITE
 	layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(inverter_layer));	
+#endif
+	
 	window_stack_push(window, true);
 }
 
@@ -1295,31 +1365,36 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 	switch (key)
 	{
 		case VERSION:
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
 		version = malloc((strlen(new_tuple->value->cstring) + 1) * sizeof(char));
 		strcpy(version, new_tuple->value->cstring);
 		break;
 		
 		case VIBRATE:
 		((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 		break;
 
 		case INVERT:
 		((SETTINGS_DATA*) context)->invert = (bool) new_tuple->value->uint8;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 		set_invert_layer();
 		break;
 
 		case LIGHT:
 		((SETTINGS_DATA*) context)->light = (bool) new_tuple->value->uint8;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		////APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 		light_enable(Settings.light);
 		break;
 
 		case DAYS:
-		((SETTINGS_DATA*) context)->days = NUM_DAYS[new_tuple->value->uint8];
-		APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		((SETTINGS_DATA*) context)->days = (bool) new_tuple->value->uint8;
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+		break;
+		
+		case AUTOSAVE:
+		((SETTINGS_DATA*) context)->autosave = (bool) new_tuple->value->uint8;
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
 		break;
 	}
 
@@ -1328,27 +1403,29 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
 {
-  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "App Message Sync Error: %d", app_message_error);
+	app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "App Message Sync Error: %d", app_message_error);
 	app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Dictionary Result Error: %d", dict_error);
 }
 
 void check_version(void)
 {
-	APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
+	app_message_open(100, 100);
+	
+	//APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
 	version = malloc(5 * sizeof(char));
 	snprintf(version, 5* sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
 	
-	Tuplet initial_values[5] = {
-		TupletCString(VERSION, version),
-		TupletInteger(VIBRATE, Settings.vibrate),
-		TupletInteger(INVERT, Settings.invert),	
-		TupletInteger(LIGHT, Settings.light),
-		TupletInteger(DAYS, (Settings.days == 15 ? 1 : (Settings.days == 45 ? 2 : (Settings.days == 60 ? 3 : 0))))
+	Tuplet initial_values[] = {
+		TupletCString(0, version),
+		TupletInteger(1, Settings.vibrate),
+		TupletInteger(2, Settings.invert),	
+		TupletInteger(3, Settings.light),
+		TupletInteger(4, Settings.days),
+		TupletInteger(5, Settings.autosave)
 	};
 	
-	//app_message_open(144, 144);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %i", sizeof(initial_values));
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %u", sizeof(initial_values));
 	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
 				  sync_tuple_changed_callback, sync_error_callback, &Settings);
 	
@@ -1357,34 +1434,40 @@ void check_version(void)
 
 void set_invert_layer(void)
 {
-		layer_set_hidden(inverter_layer_get_layer(inverter_layer), !(Settings.invert));
+#ifdef PBL_PLATFORM_APLITE
+	layer_set_hidden(inverter_layer_get_layer(inverter_layer), !(Settings.invert));	
+#endif
 }
 
 int main(void)
 {
 	srand(time(0));	
 	check_version();
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked Version...");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked Version...");
 	create_ui();
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");
 	check_for_saved_game();
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked for Saves...");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked for Saves...");
 	light_enable(Settings.light);
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Light Enabled...");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Light Enabled...");
 	set_invert_layer();
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "Inverter Layer Set...");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "Inverter Layer Set...");
 	app_event_loop();
 	app_message_deregister_callbacks();		
-	string = malloc(0);
-	format = malloc(0);
-	confirm_header = malloc(0);
-	version = malloc(0);
-	free(version);
-	free(string);
-	free(format);
-	free(confirm_header);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Length (string): %i (format): %i (confirm_header): %i (version): %i", sizeof(string), sizeof(format), sizeof(confirm_header), sizeof(version));
+	app_sync_deinit(&sync);
 	destroy_ui();
+	//string 			= malloc((strlen(string)		 + 1) * sizeof(char));
+	//format 			= malloc((strlen(format)		 + 1) * sizeof(char));
+	//confirm_header 	= malloc((strlen(confirm_header) + 1) * sizeof(char));
+	//version 		= malloc((strlen(version)		 + 1) * sizeof(char));
+	//free(version);
+	//free(string);
+	//free(format);
+	//free(confirm_header);
+	//free(&Player);
+	//free(&Settings);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "Length (string): %u (format): %u (confirm_header): %u (version): %u", sizeof(string), sizeof(format), sizeof(confirm_header), sizeof(version));
+	return 0;
 }
 
 int LOG10(int val)
@@ -1407,55 +1490,21 @@ int EXP(int val)
 	return temp;
 }
 
-void float2string(char *str, double val, short precision)
-{
-	str = malloc((3 + precision) * sizeof(char));
-	//  start with positive/negative
-	if (val < 0)
-	{
-		*(str++) = '-';
-		val = -val;
-	}
-	//  integer value
-	snprintf(str, 12, "%d", (int) val);
-	str += strlen(str);
-	val -= (int) val;
-	
-	//  decimals
-	if ((precision > 0) && (val >= .00001))
-	{
-		//  add period
-		*(str++) = '.';
-		//  loop through precision
-		for (;precision > 0; precision--)
-		{
-			if (val > 0)
-			{
-				val *= 10;
-				*(str++) = '0' + (int) (val + ((precision == 1) ? 0.5 : 0));
-				val -= (int) val;
-			}
-			else
-				break;
-		}
-	}
-	//  terminate
-	*str = '\0';	
-}
-
 void floatstrcat(char* str, double val, int precision)
 {
-	Y = val / EXP(LOG10(val) - LOG10(val) % 3);
+	double Y = val / EXP(LOG10(val) - LOG10(val) % 3);
 	if (precision > 3) precision = 3;
 	str += strlen(str);
+	
 	//  start with positive/negative
 	if (Y < 0)
 	{
 		*(str++) = '-';
 		Y = -Y;
 	}
+	
 	//  integer value
-	snprintf(str, 12, "%d", (int) Y);
+	snprintf(str, 10 * sizeof(char), "%d", (int) Y);
 	str += strlen(str);
 	Y -= (int) Y;
 	
@@ -1467,19 +1516,23 @@ void floatstrcat(char* str, double val, int precision)
 		//  loop through precision
 		for (;precision > 0; precision--)
 		{
-			if (Y > 0)
+			if (Y > 0.0)
 			{
 				Y *= 10;
-				*(str++) = '0' + (int) (Y + ((precision == 1) ? 0.5 : 0));
-				Y -= (int) val;
+				int d = (int) (Y + (precision <= 1 ? 0.5 : 0.0)) + 48.0;
+				*(str++) = d;
+				Y -= d;
+				APP_LOG(APP_LOG_LEVEL_DEBUG, "i=%i\td=%d\tc=%c\ni=%i\td=%d\tc=%c", d, d, d, (int) Y, (int) Y, (int) Y);
 			}
 			else
 				break;
 		}
 	}
+	
 	// Add postfix unit
-	if ((int)(LOG10(val) / 3))
+	if (val > 999)
 		*(str++) = postfix[LOG10(val) / 3];
+	
 	//  terminate
 	*str = '\0';	
 }
@@ -1487,82 +1540,106 @@ void floatstrcat(char* str, double val, int precision)
 // Menu Header Draw function for Title only
 void menu_header_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_text_color(ctx, GColorBlack);
 	GRect titleOrigin = layer_get_bounds(cell_layer);
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 // Menu Header Draw function for Icon and Title
 void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+  	graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
 	GRect title_bounds 			= layer_get_bounds(cell_layer);
-	bitmap_bounds.origin.x 	+= 2;
-	bitmap_bounds.origin.y	= (title_bounds.size.h - bitmap_bounds.size.h) / 2;
+	bitmap_bounds.origin.x 		+= (24 - bitmap_bounds.size.w) / 2;
+	bitmap_bounds.origin.y		= (title_bounds.size.h - bitmap_bounds.size.h) / 2;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	title_bounds.origin.x 	= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
-	title_bounds.origin.y 	-= 1;
-  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	title_bounds.origin.x 		= 26 - (26 - bitmap_bounds.size.w) / 2;
+	title_bounds.size.w			-= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
+	title_bounds.origin.y		-= 1;
+  	graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+	graphics_context_set_stroke_color(ctx, GColorDarkCandyAppleRed);
+	graphics_draw_line(ctx, (GPoint){.x = 0  , .y = title_bounds.origin.y + title_bounds.size.h},
+					   		(GPoint){.x = 144, .y = title_bounds.origin.y + title_bounds.size.h});
 }
 
 // Menu Header Draw function for Icon, Title, and Subtitle
 void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 			= gbitmap_get_bounds(bitmap);
-	GRect title_bounds 				= layer_get_bounds(cell_layer);
-	GRect subtitle_bounds 		= title_bounds;
+	graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
+	GRect title_bounds 			= layer_get_bounds(cell_layer);
+	// Set Bitmap bounds
 	bitmap_bounds.origin.x 		+= 2;
 	bitmap_bounds.origin.y		= (title_bounds.size.h - bitmap_bounds.size.h) / 2 + 3;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	title_bounds.origin.x 		= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
-	title_bounds.origin.y			= ((layer_get_bounds(cell_layer).size.h - bitmap_bounds.size.h - 24) / 2);
-	title_bounds.origin.y			-= 1;
+	// Set Title bounds
+	title_bounds.size.w			-= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
+	title_bounds.origin.x 		+= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
+	title_bounds.origin.y		= ((layer_get_bounds(cell_layer).size.h - bitmap_bounds.size.h - 24) / 2) - 8;
+	// Set SubTitle bounds
+	GRect subtitle_bounds 		= title_bounds;
 	subtitle_bounds.origin.x 	= title_bounds.origin.x;
-	subtitle_bounds.origin.y	= subtitle_bounds.size.h / 2;
-  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-	graphics_draw_text(ctx, subtitle, cell_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	subtitle_bounds.origin.y	= title_bounds.size.h / 2 - 5;
+	subtitle_bounds.size.w		= title_bounds.size.w;
+  	graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, subtitle, cell_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
 // Menu Header Draw function for long title only
 void menu_header_long_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_text_color(ctx, GColorBlack);
 	GRect titleOrigin = layer_get_bounds(cell_layer);
 	titleOrigin.size.h = menu_header_heights[Player.MenuNumber];
-  graphics_draw_text(ctx, title, confirm_font, titleOrigin, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+ 	graphics_draw_text(ctx, title, confirm_font, titleOrigin, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
 // Menu Row Draw function for Title only
 void menu_cell_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+ 	graphics_context_set_text_color(ctx, GColorBlack);
 	GRect titleOrigin = layer_get_bounds(cell_layer);
-	titleOrigin.origin.y -= 3;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	titleOrigin.origin.y -= 5;
+ 	graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+}
+
+// Menu Row Draw function Rt_Aligned
+void menu_cell_value_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* value)
+{
+	menu_cell_simple_draw(ctx, cell_layer, title);
+	graphics_context_set_text_color(ctx, GColorBlack);
+	GRect valueOrigin = layer_get_bounds(cell_layer);
+	valueOrigin.origin.y -= 5;
+	graphics_draw_text(ctx, value, cell_font, valueOrigin, GTextOverflowModeFill, GTextAlignmentRight, NULL);
 }
 
 // Menu Row Draw function for Title only (Centered)
 void menu_cell_simple_centered_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_text_color(ctx, GColorBlack);
 	GRect titleOrigin = layer_get_bounds(cell_layer);
+	titleOrigin.origin.x = 26;
+	titleOrigin.size.w = 144 - titleOrigin.origin.x * 2;
 	titleOrigin.origin.y -= 5;
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, title, confirm_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
 // Menu Row Draw function for Icon and Title
 void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
-	GRect titleOrigin 			= layer_get_bounds(cell_layer);
+	graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	GRect bitmap_bounds 	= gbitmap_get_bounds(bitmap);
+	GRect titleOrigin 		= layer_get_bounds(cell_layer);
 	bitmap_bounds.origin.x 	= (24 - bitmap_bounds.size.w) / 2;
+	bitmap_bounds.origin.y	+= 1;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
-	titleOrigin.origin.x 		= 26;
-	titleOrigin.origin.y 		-= 3;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	titleOrigin.origin.x 	= 26;
+	titleOrigin.origin.y 	-= 8;
+  	graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 //! Menu row drawing function to draw a basic cell with the title, subtitle, and icon. 
@@ -1574,14 +1651,13 @@ void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const ch
 //! @param icon Draws an icon to the left of the text.
 void menu_cell_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
-	GRect bitmap_bounds 		= gbitmap_get_bounds(bitmap);
-	GRect title_bounds 			= layer_get_bounds(cell_layer);
-	//GRect subtitle_bounds 	= layer_get_bounds(cell_layer);
+	graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	GRect bitmap_bounds 	= gbitmap_get_bounds(bitmap);
+	GRect title_bounds 		= layer_get_bounds(cell_layer);
 	bitmap_bounds.origin.x 	= (26 - bitmap_bounds.size.w) / 2;
 	graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
 	title_bounds.origin.x 	= 26;
 	title_bounds.origin.y 	-= 3;
-  graphics_draw_text(ctx, title, cell_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-	//graphics_draw_text(ctx, subtitle, subtitle_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, title, cell_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }

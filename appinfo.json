@@ -1,10 +1,11 @@
 {
     "appKeys": {
+        "Autosave": 5,
         "Backlight": 3,
         "Days": 4,
         "Invert": 2,
-        "Version": 0,
-        "Vibrate": 1
+        "Vibrate": 1,
+        "version": 0
     },
     "capabilities": [
         "configurable"
@@ -15,8 +16,19 @@
     "resources": {
         "media": [
             {
+                "file": "images/menu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/Bank.png",
                 "name": "IMAGE_BANK_ICON",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt",
+                    "chalk"
+                ],
                 "type": "png"
             },
             {
@@ -46,7 +58,6 @@
             },
             {
                 "file": "images/Rx.png",
-                "menuIcon": true,
                 "name": "IMAGE_GAME_ICON",
                 "type": "png"
             },
@@ -67,29 +78,32 @@
             },
             {
                 "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_18",
-                "trackingAdjust": -2,
+                "name": "FONT_LUCIDA_CONSOLE_REG_14",
+                "trackingAdjust": -5,
                 "type": "font"
             },
             {
                 "file": "fonts/lucon.ttf",
                 "name": "FONT_LUCIDA_CONSOLE_REG_22",
-                "trackingAdjust": -2,
+                "trackingAdjust": -16,
                 "type": "font"
             },
             {
                 "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_14",
-                "trackingAdjust": -2,
+                "name": "FONT_LUCIDA_CONSOLE_REG_18",
+                "trackingAdjust": -6,
                 "type": "font"
             }
         ]
     },
-    "sdkVersion": "2",
+    "sdkVersion": "3",
     "shortName": "Drug Wars",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
     "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
-    "versionCode": 1,
-    "versionLabel": "2.1",
+    "versionLabel": "3.0",
     "watchapp": {
         "watchface": false
     }

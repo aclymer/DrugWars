@@ -3,30 +3,34 @@
 
 ToastLayer* toast_layer_create(Window *parent)
 {
-  ToastLayer *this = malloc(sizeof(ToastLayer));
-  this->parent = parent;
-  this->parent_bounds = layer_get_bounds(window_get_root_layer(parent));
+	ToastLayer *this = malloc(sizeof(ToastLayer));
+	this->parent = parent;
+	this->parent_bounds = layer_get_bounds(window_get_root_layer(parent));
 	this->content_layer = text_layer_create(GRect(TOAST_LAYER_MARGIN, 168 + TOAST_LAYER_MARGIN, 144 - (2 * TOAST_LAYER_MARGIN), 168));
-  this->bg_layer = text_layer_create(GRect(0, this->parent_bounds.size.h, 144, this->size.h + TOAST_LAYER_MARGIN));
-  text_layer_set_font(this->content_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+	this->bg_layer = text_layer_create(GRect(0, this->parent_bounds.size.h, 144, this->size.h + TOAST_LAYER_MARGIN));
+	text_layer_set_font(this->content_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	text_layer_set_text_alignment(this->content_layer, GTextAlignmentCenter);
+
 	this->burnt_toast_layer = inverter_layer_create(layer_get_bounds(text_layer_get_layer(this->content_layer)));
+
   return this;
 }
 
 void toast_layer_destroy(ToastLayer *this)
 {
-  text_layer_destroy(this->bg_layer);
-  text_layer_destroy(this->content_layer);
+	text_layer_destroy(this->bg_layer);
+	text_layer_destroy(this->content_layer);
 	inverter_layer_destroy(this->burnt_toast_layer);
 	free(this);
 }
 
-static void anim_stopped(struct Animation *animation, bool finished, void *context) {
-  property_animation_destroy((PropertyAnimation*)animation);
+static void anim_stopped(struct Animation *animation, bool finished, void *context)
+{
+	property_animation_destroy((PropertyAnimation*)animation);
 }
 
-static void animate_layer(Layer *layer, GRect start, GRect finish, int duration) {
+static void animate_layer(Layer *layer, GRect start, GRect finish, int duration)
+{
   PropertyAnimation *anim = property_animation_create_layer_frame(layer, &start, &finish);
   animation_set_duration((Animation*)anim, duration);
   animation_set_curve((Animation*)anim, AnimationCurveEaseInOut);
@@ -80,11 +84,11 @@ void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
 
     // Create large, scale down
     text_layer_set_text(this->content_layer, this->content_buffer);
-    text_layer_set_background_color(this->content_layer, GColorWhite);
+    text_layer_set_background_color(this->content_layer, duration > 3000 ? GColorRed : GColorLimerick);
 
     // Create offscreen according to size used by TextLayer
     this->size = text_layer_get_content_size(this->content_layer);
-    this->size.h = 150 - offset; // Better wrapping
+    this->size.h = 168 - offset; // Better wrapping
     text_layer_set_background_color(this->bg_layer, GColorBlack);
 
     // Add BG first
@@ -104,9 +108,10 @@ void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
 
     // Auto hide
     app_timer_register(this->duration, timer_callback, this);
-		
+#ifdef PBL_PLATFORM_APLITE
 		layer_add_child(text_layer_get_layer(this->content_layer), inverter_layer_get_layer(this->burnt_toast_layer));
 		layer_set_hidden(inverter_layer_get_layer(this->burnt_toast_layer), !(Settings.invert));
+#endif
   }
 }
 
