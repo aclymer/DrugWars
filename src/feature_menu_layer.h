@@ -2,30 +2,29 @@
 #include <pebble_process_info.h>
 #undef APP_LOG
 #define APP_LOG(...)
+
 #ifdef PBL_PLATFORM_APLITE
-	#define GColorLimerick GColorWhite
-	#define GColorCeleste GColorWhite
-	#define GColorDarkCandyAppleRed GColorBlack
-	#define menu_layer_set_normal_colors(...)
-	#define menu_layer_pad_bottom_enable(...)
-	#define menu_layer_set_highlight_colors(...)
-#else
-	#define InverterLayer void
-	#define inverter_layer_create(...) NULL
+  #undef  GColorLimerick
+	#define GColorLimerick 				GColorWhite
+	#undef  GColorCeleste
+	#define GColorCeleste 				GColorWhite
+  #undef  GColorDarkCandyAppleRed
+	#define GColorDarkCandyAppleRed 	GColorBlack
 #endif
 
+
 typedef enum ITEMS {
-	TOTAL				= 0,
- 	COCAINE 			= 1,
- 	HEROINE 			= 2,
- 	ACID				= 3,
- 	WEED				= 4,
- 	SPEED				= 5,
-	LUDES				= 6,
+	TOTAL			    	= 0,
+ 	COCAINE 		  	= 1,
+ 	HEROINE 		  	= 2,
+ 	ACID			    	= 3,
+ 	WEED			    	= 4,
+ 	SPEED			    	= 5,
+	LUDES			    	= 6,
 } TRENCHCOAT_ITEMS;
 
 enum LOCATIONS {
-		NEVERMIND		= 0,
+		NEVERMIND	  	= 0,
 		BRONX       	= 1,
 		GHETTO       	= 2,
 		CENTRAL_PARK 	= 3,
@@ -35,51 +34,49 @@ enum LOCATIONS {
 };
 
 enum KEYS {
-	VERSION				= 0,
-	VIBRATE				= 1,
-	INVERT				= 2,
-	LIGHT 				= 3,
-	DAYS				= 4,
-	AUTOSAVE			= 5
+	VERSION			  	= 0,
+	VIBRATE			  	= 1,
+	LIGHT 			  	= 2,
+	DAYS				    = 3,
+	AUTOSAVE			  = 4
 };
 
-#define HIGH_SCORE_KEY					0
-#define SETTINGS_DATA_KEY				247
-#define PLAYER_SIZE_KEY					20
-#define PLAYER_DATA_KEY					24
-#define NUM_MENU_ICONS 					9
-#define MENU_CELL_BASIC_HT				19
-#define	MENU_CELL_BASIC_HEADER_HT		33
-#define SUBTITLED_MENU_HEADER_HT	 	44
-#define NUM_MENU_SECTIONS				1
-#define NUM_HOME_MENU_ITEMS 			7
-#define NUM_PRICES_MENU_ITEMS			7
-#define NUM_SELL_MENU_ITEMS				7
-#define BASIC_ITEM_LENGTH				19
-#define MAX_ITEM_LENGTH					63
-#define SHORT_MESSAGE_DELAY				2000
-#define LONG_MESSAGE_DELAY				5000
-#define PUNISHMENT_DELAY				10000
+#define HIGH_SCORE_KEY					      0
+#define SETTINGS_DATA_KEY				      247
+#define PLAYER_SIZE_KEY					      20
+#define PLAYER_DATA_KEY					      24
+#define NUM_MENU_ICONS 					      9
+#define MENU_CELL_BASIC_HT			  	  19
+#define	MENU_CELL_BASIC_HEADER_HT		  35
+#define SUBTITLED_MENU_HEADER_HT	   	54
+#define TEXT_ORIGIN_Y_SHIFT           -7
+#define NUM_MENU_SECTIONS			      	1
+#define NUM_HOME_MENU_ITEMS 		    	7
+#define NUM_PRICES_MENU_ITEMS		    	7
+#define NUM_SELL_MENU_ITEMS			    	7
+#define BASIC_ITEM_LENGTH			      	19
+#define MAX_ITEM_LENGTH				      	63
+#define SHORT_MESSAGE_DELAY			    	2000
+#define LONG_MESSAGE_DELAY			    	5000
+#define PUNISHMENT_DELAY			      	10000
 
-
-InverterLayer 	*inverter_layer;	
-MenuLayer 		*home_menu_layer;
-MenuIndex 		*p_NumWindowContext = NULL;
-GBitmap 		*menu_icons[NUM_MENU_ICONS];
-GBitmap 		*game_icon = NULL;
+MenuLayer 		  *home_menu_layer;
+MenuIndex 		  *p_NumWindowContext = NULL;
+GBitmap 		    *menu_icons[NUM_MENU_ICONS];
+GBitmap 		    *game_icon = NULL;
 
 // Get app version info
-extern const PebbleProcessInfo __pbl_app_info;
+extern const    PebbleProcessInfo __pbl_app_info;
 
 // In-Game Variables
-int				value, X, Y, Score;
-bool			num_window_is_visible;
-short 			current_icon;
-short			menu_number = 0;
-GFont 			header_font;
-GFont 			cell_font;
-GFont 			subtitle_font;
-GFont			confirm_font;
+int				      value, X, Y, Score;
+bool			      num_window_is_visible;
+short 			    current_icon;
+short			      menu_number = 0;
+GFont 			    header_font;
+GFont 			    cell_font;
+GFont 			    subtitle_font;
+GFont			      confirm_font;
 
 // HighScore Array
 int high_scores[4];
@@ -98,8 +95,8 @@ const short menu_header_heights[10] =
 	SUBTITLED_MENU_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT * 3	,
 	MENU_CELL_BASIC_HEADER_HT * 3 ,
-	SUBTITLED_MENU_HEADER_HT + 19	,
-	MENU_CELL_BASIC_HEADER_HT * 3
+	SUBTITLED_MENU_HEADER_HT  + MENU_CELL_BASIC_HT,
+	SUBTITLED_MENU_HEADER_HT  + 3 * MENU_CELL_BASIC_HT
 };
 
 // Drug Names
@@ -117,10 +114,10 @@ const char* drug_names[7] =
 // Gun Names
 const char* gun_names[4] =
 {
-	"Total",
-	".38 SPECIAL",
-	".44 MAGNUM",
-	"BARETTA 9MM"
+	"Total\0",
+	".38 SPECIAL\0",
+	".44 MAGNUM\0",
+	"BARETTA 9MM\0"
 };
 
 // Home Menu
@@ -194,30 +191,30 @@ const char* confirm_menu[2] =
 	"YES"
 };
 
-typedef void					(*MenuCallback)(MenuIndex *);
+typedef void					                  (*MenuCallback)(MenuIndex *);
 
 // In-Game functions
-void 	Intro					(MenuIndex *);
-void 	Being_Shot				(MenuIndex *);
-void 	Buy_Trenchcoat			(MenuIndex *);
-void 	Buy_Gun					(MenuIndex *);
-void 	Cop_187					(MenuIndex *);
-void 	Doctor					(MenuIndex *);
-void 	Event_Generator			(MenuIndex *);
-void 	Exit					(MenuIndex *);
-void 	Game_Over				(MenuIndex *);
-void	Load_Game				(MenuIndex *);
-void 	Smoke_It				(MenuIndex *);
-void 	UpdateFreespace			(MenuIndex *);
-void 	Play_Again				(MenuIndex *);
-void 	BuyDrugs				(int, MenuIndex *);
-void 	SellDrugs				(int, MenuIndex *);
-void 	Save_Game				(void);
-void  	set_invert_layer		(void);
-void 	Show_Instructions		(void *);
-void 	show_number_window_layer(void *);
-void 	hide_number_window_layer(void);
-void 	num_selected_callback	(struct NumberWindow *, void *);
+void 	Intro					                    (MenuIndex *);
+void 	Being_Shot				                (MenuIndex *);
+void 	Buy_Trenchcoat			              (MenuIndex *);
+void 	Buy_Gun					                  (MenuIndex *);
+void 	Cop_187					                  (MenuIndex *);
+void 	Doctor					                  (MenuIndex *);
+void 	Event_Generator			              (MenuIndex *);
+void 	Exit					                    (MenuIndex *);
+void 	Game_Over				                  (MenuIndex *);
+void	Load_Game				                  (MenuIndex *);
+void 	Smoke_It				                  (MenuIndex *);
+void 	UpdateFreespace			              (MenuIndex *);
+void 	Play_Again				                (MenuIndex *);
+void 	BuyDrugs				                  (int, MenuIndex *);
+void 	SellDrugs				                  (int, MenuIndex *);
+void 	Save_Game				                  (void);
+void  set_invert_layer		              (void);
+void 	Show_Instructions		              (void *);
+void 	show_number_window_layer          (void *);
+void 	hide_number_window_layer          (void);
+void 	num_selected_callback	            (struct NumberWindow *, void *);
 void 	number_window_incremented_callback(struct NumberWindow *, void *);
 
 MenuCallback p_MenuCallbackContext[2] = {NULL, NULL};
@@ -267,5 +264,5 @@ char	*format 		= NULL;
 char	*string 		= NULL;
 char	*strval			= NULL;
 char 	*confirm_header = NULL;
-char	*version 		= "0.00";
+char	*version 		= "3.10";
 char 	*number_window_value_text = NULL;

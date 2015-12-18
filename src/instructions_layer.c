@@ -1,23 +1,25 @@
 #include <pebble.h>
 #include "instructions_layer.h"
 
-static Window 									*s_window;
-static ScrollLayer 								*s_scroll_layer;
-static TextLayer 								*s_text_layer;
+static Window 								*s_window;
+static ScrollLayer 						*s_scroll_layer;
+static TextLayer 							*s_text_layer;
 static char										*instructions_text;
 
 static void initialise_ui(void)
 {
 	s_window 									= window_create();
+  /*
+#ifdef PBL_PLATFORM_APLITE
+	window_set_fullscreen						(s_window, 0);
+#endif
+*/
 	Layer *window_layer							= window_get_root_layer(s_window);
 	GRect bounds 								= layer_get_bounds(window_layer);
   	GRect max_text_bounds 						= GRect(0, 0, bounds.size.w, 2000);
 	s_text_layer 								= text_layer_create(max_text_bounds);
 	s_scroll_layer 								= scroll_layer_create(bounds);	
 	
-	#ifndef PBL_SDK_3
-	window_set_fullscreen						(s_window, 0);
-	#endif
 
 	text_layer_set_text							(s_text_layer, instructions_text);
 	text_layer_set_text_alignment				(s_text_layer, GTextAlignmentCenter);
@@ -26,9 +28,9 @@ static void initialise_ui(void)
 	scroll_layer_set_content_size				(s_scroll_layer, text_layer_get_content_size(s_text_layer));
 	layer_add_child								(window_layer, scroll_layer_get_layer(s_scroll_layer));
 	
-	#ifdef PBL_ROUND
+#ifdef PBL_ROUND
 	scroll_layer_set_paging						(s_scroll_layer, true);
-	#endif
+#endif
 }
 
 static void destroy_ui(void)

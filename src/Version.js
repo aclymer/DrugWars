@@ -1,4 +1,4 @@
-var setPebbleToken = 'V7VX';
+var setPebbleToken = 'P6W6';
 var appUUID = '60a604d4-73c2-4fab-893b-592456edcc01';
 var ready = false;
 

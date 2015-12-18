@@ -1,9 +1,8 @@
 {
     "appKeys": {
-        "Autosave": 5,
-        "Backlight": 3,
-        "Days": 4,
-        "Invert": 2,
+        "Autosave": 4,
+        "Backlight": 2,
+        "Days": 3,
         "Vibrate": 1,
         "version": 0
     },
@@ -19,90 +18,113 @@
                 "file": "images/menu_icon.png",
                 "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Bank.png",
                 "name": "IMAGE_BANK_ICON",
                 "targetPlatforms": [
                     "aplite",
-                    "basalt",
-                    "chalk"
+                    "basalt"
                 ],
-                "type": "png"
+                "type": "bitmap"
             },
             {
                 "file": "images/DWPD.png",
                 "name": "IMAGE_DWPD_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/Prices.png",
-                "name": "IMAGE_PRICES_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Shark.png",
                 "name": "IMAGE_LOAN_SHARK_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Sell.png",
                 "name": "IMAGE_SELL_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Buy.png",
                 "name": "IMAGE_BUY_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/Rx.png",
-                "name": "IMAGE_GAME_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Return.png",
                 "name": "IMAGE_RETURN_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Trenchcoat.png",
                 "name": "IMAGE_TRENCHCOAT_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "images/Subway.png",
                 "name": "IMAGE_SUBWAY_ICON",
-                "type": "png"
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
-                "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_14",
-                "trackingAdjust": -5,
-                "type": "font"
+                "file": "images/Rx.png",
+                "name": "IMAGE_GAME_ICON",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             },
             {
-                "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_22",
-                "trackingAdjust": -16,
-                "type": "font"
-            },
-            {
-                "file": "fonts/lucon.ttf",
-                "name": "FONT_LUCIDA_CONSOLE_REG_18",
-                "trackingAdjust": -6,
-                "type": "font"
+                "file": "images/Prices.png",
+                "name": "IMAGE_PRICES_ICON",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
             }
         ]
     },
     "sdkVersion": "3",
     "shortName": "Drug Wars",
     "targetPlatforms": [
+        "aplite",
         "basalt"
     ],
     "uuid": "60a604d4-73c2-4fab-893b-592456edcc01",
-    "versionLabel": "3.0",
+    "versionLabel": "3.1",
     "watchapp": {
         "watchface": false
     }
