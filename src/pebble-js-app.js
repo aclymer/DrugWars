@@ -1,4 +1,4 @@
-var setPebbleToken = 'P6W6';
+var setPebbleToken = 'PHZE';
 var appUUID = '60a604d4-73c2-4fab-893b-592456edcc01';
 var ready = false;
 
@@ -22,40 +22,46 @@ function versionCheck(uuid, current_version) {
 }
 
 Pebble.addEventListener('ready', function(e) {
-	ready = true;
+  ready = true;
+  console.log("Ready! Acct Token: " + Pebble.getAccountToken());
+  Pebble.sendAppMessage({"ready" : 1});
 });
 	
 Pebble.addEventListener('appmessage', function(e) {
 	var Version = e.payload.version;
 	console.log('This Version: ' + Version + '\n');
-	versionCheck(appUUID, Version);
-	
-	var settings = localStorage.getItem(setPebbleToken);
-
-	var request = new XMLHttpRequest();
-	request.open('GET', 'http://x.SetPebble.com/api/' + setPebbleToken + '/' + Pebble.getAccountToken(), false);
-	request.onload = function(e) {
-		if (request.readyState == 4)
-			if (request.status == 200)
-				if (typeof(settings) == 'string')
-				{
-					if (settings != request.responseText)
-					{
-						try { Pebble.sendAppMessage(JSON.parse(request.responseText)); }
-						catch (f) {console.log(f);}
-					}
-					else
-					{
-						try	{ Pebble.sendAppMessage(JSON.parse(settings)); } 
-						catch (f)	{ console.log(f); }
-					}
-				}
-	};
-	request.send(null);
+  try {	versionCheck(appUUID, Version); }
+  catch(f) { console.log(f); }
+  finally
+  {	
+  	var settings = localStorage.getItem(setPebbleToken);
+  
+  	var request = new XMLHttpRequest();
+  	request.open('GET', 'http://x.SetPebble.com/api/' + setPebbleToken + '/' + Pebble.getAccountToken(), false);
+  	request.onload = function(e) {
+  		if (request.readyState == 4)
+  			if (request.status == 200)
+  				if (typeof(settings) == 'string')
+  				{
+  					if (settings != request.responseText)
+  					{
+  						try { Pebble.sendAppMessage(JSON.parse(request.responseText)); }
+  						catch (f) {console.log(f);}
+  					}
+  					else
+  					{
+  						try	{ Pebble.sendAppMessage(JSON.parse(settings)); } 
+  						catch (f)	{ console.log(f); }
+  					}
+  				}
+  	};
+  	request.send(null);
+  }
 });
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  Pebble.openURL('http://x.SetPebble.com/' + setPebbleToken + '/' + Pebble.getAccountToken());
+  try  { Pebble.openURL('http://x.SetPebble.com/' + setPebbleToken + '/' + Pebble.getAccountToken()); }
+  catch(f) { console.log(f); }
 });
 	
 Pebble.addEventListener('webviewclosed', function(e) {

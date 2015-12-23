@@ -123,20 +123,26 @@ void Event_Generator(MenuIndex *cell_index)
     case 13:
     X = rand() % 3 + 1;
     // If there is room for ammo and the gun (if you don't already have the gun), then offer
-    if (Player.Money.Cash >= Player.Trenchcoat.Guns[X].Price + 200
+    if (Player.Money.Cash >= Player.Trenchcoat.Guns[X].Price + 100
         && Player.Trenchcoat.Freespace >= Player.Trenchcoat.Guns[X].Capacity
         + (Player.Trenchcoat.Guns[X].Quantity > 0 ? 0 : 5))
     {
-      confirm_header = (char*)malloc((strlen("WILL YOU BUY AMMO FOR YOUR \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char));
+      confirm_header = (char*)malloc((strlen((Player.Trenchcoat.Guns[X].Quantity > 0 ?
+                                              "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
+                                              "WILL YOU BUY A \n%s \n FOR $%i? ")) + 1) * sizeof(char));
       strcat(confirm_header, gun_names[X]);
       snprintf(confirm_header,
-               ((strlen("WILL YOU BUY AMMO FOR YOU \n.38 SPECIAL\n FOR $400? ") + 1) * sizeof(char)),
-               (Player.Trenchcoat.Guns[X].Quantity > 0 ? "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " : "WILL YOU BUY A \n%s \n FOR $%i? "),
+               ((strlen( (Player.Trenchcoat.Guns[X].Quantity > 0 ?
+                          "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
+                          "WILL YOU BUY A \n%s \n FOR $%i? ")) + 1) * sizeof(char)),
+                         (Player.Trenchcoat.Guns[X].Quantity > 0 ?
+                          "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
+                          "WILL YOU BUY A \n%s \n FOR $%i? "),
                gun_names[X],
                Player.Trenchcoat.Guns[X].Price);
       p_MenuCallbackContext[0] = NULL;
       p_MenuCallbackContext[1] = &Buy_Gun;
-      Player.Trenchcoat.Guns[0].Damage = X;
+      Player.Trenchcoat.Guns[TOTAL].Damage = X;
       Player.MenuNumber = 9;
       menu_layer_reload_data(home_menu_layer);
     }
@@ -440,7 +446,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data)
 {
   int len = (strlen("9.999K") + 1) * sizeof(char);
-  strval = (char*)malloc(9 * sizeof(char));
+  strval = (char*)malloc(11 * sizeof(char));
   switch(Player.MenuNumber)
   {
     // Draw Main Menu
@@ -459,30 +465,26 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     // Draw Trenchcoat Menu
     case 2:
     string = (char*)malloc(strlen(trenchcoat_items[cell_index->row]) * sizeof(char) + len);
+    strcpy(string, trenchcoat_items[cell_index->row]);
     switch(cell_index->row)
     {			
       case 1:
-      strcpy(string, trenchcoat_items[1]);
-      snprintf(strval, (6 * sizeof(char)), "%2u",	Player.Trenchcoat.Guns[0].Ammo);
-      break;
-
-      case 2:
-      strcpy(string, trenchcoat_items[2]);
-      snprintf(strval, 4 * sizeof(char), "%2i", Player.Damage);
-      break;
-
-      case 3:
-      strcpy(string, trenchcoat_items[3]);
       snprintf(strval, 4 * sizeof(char), "%3i", Player.Trenchcoat.Drug[TOTAL].Quantity);
       break;
 
-      case 4:
-      strcpy(string, trenchcoat_items[4]);
+      case 2:
       snprintf(strval, 4 * sizeof(char), "%1i", Player.Trenchcoat.Guns[0].Quantity);
       break;
 
+      case 3:
+      snprintf(strval, (6 * sizeof(char)), "%2u",	Player.Trenchcoat.Guns[0].Ammo);
+      break;
+
+      case 4:
+      snprintf(strval, 11 * sizeof(char), "%2i OF 50", Player.Damage);
+      break;
+
       case 5:
-      strcpy(string, trenchcoat_items[5]);
       snprintf(strval, 4 * sizeof(char), "%3u", Player.Trenchcoat.Freespace);
       break;
     }
@@ -666,15 +668,10 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
           toast_layer_show(message_layer, "YOU CAN'T AFFORD THAT SHIT!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
           else
         {
-          //string = (char*)malloc((strlen("BUY HOW MUCH ") + strlen(drug_names[cell_index->row]) + 2) * sizeof(char));
-          //strcpy(string, "BUY HOW MUCH ");
-          //strcat(string, drug_names[cell_index->row]);
-          //strcat(string, "?");
-          Num_Input("BUY HOW MUCH?", (Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price > Player.Trenchcoat.Freespace ?
+          Num_Input("BUY HOW MUCH?",  (Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price > Player.Trenchcoat.Freespace ?
                                       Player.Trenchcoat.Freespace :
                                       Player.Money.Cash / Player.Trenchcoat.Drug[cell_index->row].Price), 0, 1, 0, cell_index
                    );
-          //free(string);
           return;
         }
       }
@@ -900,9 +897,9 @@ void window_load(Window *window)
   game_icon										                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
 
   // Load custom font	
-  header_font 	                                = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_22));
-  cell_font                                     = fonts_get_system_font(FONT_KEY_GOTHIC_24);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_18));
-  subtitle_font 	                              = fonts_get_system_font(FONT_KEY_GOTHIC_18);//fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LUCIDA_CONSOLE_REG_14));
+  header_font 	                                = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  cell_font                                     = fonts_get_system_font(FONT_KEY_GOTHIC_24);
+  subtitle_font 	                              = fonts_get_system_font(FONT_KEY_GOTHIC_18);
   confirm_font                                  = fonts_get_system_font(FONT_KEY_GOTHIC_24);
 
   // Set all the callbacks for the menu layer
@@ -1006,10 +1003,6 @@ void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cel
   number_window_set_step_size(number_window, delta);
   number_window_set_value(number_window, set);
   number_window_incremented_callback(number_window, (void*)cell_index);	
-
-#ifdef PBL_PLATFORM_APLITE
-  //window_set_status_bar_icon(number_window_get_window(number_window), menu_icons[Player.MenuNumber]);
-#endif
 
   Window *number_window_root = number_window_get_window(number_window);
   Layer *number_window_root_layer = window_get_root_layer(number_window_root);
@@ -1199,10 +1192,6 @@ void Game_Over(MenuIndex *cell_index)
   else
     persist_write_data(HIGH_SCORE_KEY, high_scores, sizeof(high_scores));
 
-  psleep(40);
-  APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
-  APP_LOG(APP_LOG_LEVEL_INFO, "Score: %i HighScore: %i", Score, high_scores[Settings.days]);
-
   if (Score > high_scores[Settings.days])
   {
     high_scores[Settings.days] = Score;
@@ -1217,6 +1206,11 @@ void Game_Over(MenuIndex *cell_index)
     snprintf(string, ((strlen("GAME OVER!\n\nHIGH SCORE:\n$9999999999\nYOUR SCORE:\n$9999999999") + 1) * sizeof(char)),
              "GAME OVER!\n\nHIGH SCORE:\n$%i\nYOUR SCORE:\n$%i", high_scores[Settings.days], Score);
   }
+  
+  psleep(40);
+  APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
+  APP_LOG(APP_LOG_LEVEL_INFO, "Score: %i HighScore: %i", Score, high_scores[Settings.days]);
+
   toast_layer_show(message_layer, string, PUNISHMENT_DELAY, 0);
   free(string);
 
@@ -1268,8 +1262,12 @@ void Load_Game(MenuIndex *cell_index)
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
   APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %u", sizeof(Player));
+  APP_LOG(APP_LOG_LEVEL_INFO, "Settings:");
+  APP_LOG(APP_LOG_LEVEL_INFO, "Autosave - %i", Settings.autosave);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Vibrate - %i", Settings.vibrate);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Light - %i", Settings.light);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Days - %i", NUM_DAYS[Settings.days]);
   APP_LOG(APP_LOG_LEVEL_INFO, "Settings Size: %u", sizeof(Settings));
-
   menu_layer_reload_data(home_menu_layer);
 
   return;
@@ -1278,7 +1276,7 @@ void Load_Game(MenuIndex *cell_index)
 void window_unload(Window *window) 
 {
   // Save Player Data
-  if (Player.Day < NUM_DAYS[Settings.days] && Player.Day > 1)
+  if (Player.Day <= NUM_DAYS[Settings.days] && Player.Day > 1)
     Save_Game();
   
   if (Player.Day > NUM_DAYS[Settings.days] || Player.Damage >= 50)
@@ -1393,9 +1391,11 @@ static void create_ui(void)
   {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data does not exist...");
     Settings.vibrate 	= false;
-    Settings.invert		= false;
+    Settings.autosave	= false;
     Settings.light		= false;
-    Settings.days		= 0;
+    Settings.days		  = 0;
+    
+    persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
   }
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %u", sizeof(SETTINGS_DATA));
@@ -1415,24 +1415,29 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
     case VIBRATE:
     ((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.vibrate);
     break;
 
     case LIGHT:
     ((SETTINGS_DATA*) context)->light = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.light);
     light_enable(Settings.light);
     break;
 
     case DAYS:
-    ((SETTINGS_DATA*) context)->days = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
+    ((SETTINGS_DATA*) context)->days = (int) new_tuple->value->uint8;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.days);
     break;
 
     case AUTOSAVE:
     ((SETTINGS_DATA*) context)->autosave = (bool) new_tuple->value->uint8;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.autosave);
+    break;
+    
+    case 5:
     APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
     break;
+    
   }
 
   persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
@@ -1444,35 +1449,46 @@ static void sync_error_callback(DictionaryResult dict_error, AppMessageResult ap
   app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Dictionary Result Error: %d", dict_error);
 }
 
+static void inbox_received_handler(DictionaryIterator *iter, void *context)
+{  
+  Tuple *ready_tuple = dict_find(iter, 5);
+  
+  if (ready_tuple)
+  {
+    APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
+    
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
+  
+    Tuplet initial_values[] = {
+      TupletCString(0, version),
+      TupletInteger(1, Settings.vibrate),
+      TupletInteger(2, Settings.light),
+      TupletInteger(3, Settings.days),
+      TupletInteger(4, Settings.autosave),
+    };
+  
+    APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %u", sizeof(initial_values));
+    app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
+                  sync_tuple_changed_callback, sync_error_callback, &Settings);
+    
+    return;
+  }
+}
+
 void check_version(void)
 {
+  app_message_register_inbox_received(inbox_received_handler); 
   app_message_open(100, 100);
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
-  version = malloc(5 * sizeof(char));
-  snprintf(version, 5* sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
-
-  Tuplet initial_values[] = {
-    TupletCString(0, version),
-    TupletInteger(1, Settings.vibrate),
-    TupletInteger(2, Settings.invert),	
-    TupletInteger(3, Settings.light),
-    TupletInteger(4, Settings.days),
-    TupletInteger(5, Settings.autosave)
-  };
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %u", sizeof(initial_values));
-  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
-                sync_tuple_changed_callback, sync_error_callback, &Settings);
-
+  version = malloc( 5 * sizeof(char));
+  snprintf(version, 5 * sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
+   
   return;
 }
 
 int main(void)
 {
   srand(time(0));	
-  //check_version();
+  check_version();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked Version...");
   create_ui();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");

@@ -19,7 +19,7 @@ typedef struct {
 	int 			Capacity;
 	int 			Freespace;
 	GUNS 			Guns[4];
-	DRUGS 			Drug[7];				
+	DRUGS 		Drug[7];				
 } INVENTORY;
 
 typedef struct {
@@ -46,7 +46,6 @@ extern PLAYER_DATA Player;
 typedef struct {
 	bool autosave;
 	bool vibrate;
-	bool invert;
 	bool light;
 	short days;
 } SETTINGS_DATA;

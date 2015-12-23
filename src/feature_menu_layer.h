@@ -38,7 +38,8 @@ enum KEYS {
 	VIBRATE			  	= 1,
 	LIGHT 			  	= 2,
 	DAYS				    = 3,
-	AUTOSAVE			  = 4
+	AUTOSAVE			  = 4,
+  READY           = 5
 };
 
 #define HIGH_SCORE_KEY					      0
@@ -102,13 +103,13 @@ const short menu_header_heights[10] =
 // Drug Names
 const char* drug_names[7] =
 {
-	"TOTAL\0",
- 	"COCAINE\0",
- 	"HEROINE\0",
- 	"ACID\0",
- 	"WEED\0",
- 	"SPEED\0",
-	"LUDES\0",
+	"TOTAL",
+ 	"COCAINE",
+ 	"HEROINE",
+ 	"ACID",
+ 	"WEED",
+ 	"SPEED",
+	"LUDES",
 };
 
 // Gun Names
@@ -137,10 +138,10 @@ const char* menu_items[8] =
 const char* trenchcoat_items[6] =
 {
 	"BACK",
-	"AMMO",
-	"DAMAGE",
 	"DRUGS",
 	"GUNS",
+	"AMMO",
+	"DAMAGE",
 	"FREESPACE"
 };
 
@@ -264,5 +265,5 @@ char	*format 		= NULL;
 char	*string 		= NULL;
 char	*strval			= NULL;
 char 	*confirm_header = NULL;
-char	*version 		= "3.10";
+char	*version 		= "0.00";
 char 	*number_window_value_text = NULL;

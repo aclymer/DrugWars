@@ -4,6 +4,7 @@
         "Backlight": 2,
         "Days": 3,
         "Vibrate": 1,
+        "ready": 5,
         "version": 0
     },
     "capabilities": [
