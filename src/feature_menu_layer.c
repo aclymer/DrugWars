@@ -600,9 +600,18 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   free(string);
 }
 
+static void menu_selection_will_change_callback(MenuLayer *menu_layer, MenuIndex *new_cell_index, MenuIndex old_cell_index, void *data)
+{
+  if (toast_layer_is_visible(message_layer))
+    *new_cell_index = old_cell_index;
+}
+
 // Here we capture when a user selects a menu item
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data)
 {	
+  if (toast_layer_is_visible(message_layer))
+    return;
+  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "menu_select_layer(menu[%u], row[%i])", Player.MenuNumber, cell_index->row);
 
   if (Player.MenuNumber > 0 && Player.MenuNumber < 8 && cell_index->row == 0)
@@ -899,13 +908,14 @@ void window_load(Window *window)
   // Set all the callbacks for the menu layer
   menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
                            {
-                             .get_num_sections 	= menu_get_num_sections_callback,
-                             .get_num_rows 		  = menu_get_num_rows_callback,
-                             .get_header_height = menu_get_header_height_callback,
-                             .get_cell_height	  = menu_get_cell_height_callback,
-                             .draw_header 		  = menu_draw_header_callback,
-                             .draw_row 			    = menu_draw_row_callback,
-                             .select_click 		  = menu_select_callback,
+                             .get_num_sections 	    = menu_get_num_sections_callback,
+                             .get_num_rows 		      = menu_get_num_rows_callback,
+                             .get_header_height     = menu_get_header_height_callback,
+                             .get_cell_height	      = menu_get_cell_height_callback,
+                             .draw_header 		      = menu_draw_header_callback,
+                             .draw_row 			        = menu_draw_row_callback,
+                             .select_click 		      = menu_select_callback,
+                             .selection_will_change = menu_selection_will_change_callback,
                            });
 
   // Bind the menu layer's click config provider to the window for interactivity
@@ -1267,11 +1277,13 @@ void Load_Game(MenuIndex *cell_index)
 
 void window_unload(Window *window) 
 {
-  /*
-#ifdef PBL_PLATFORM_APLITE
-  inverter_layer_destroy(inverter_layer);
-#endif
-*/
+  // Save Player Data
+  if (Player.Day < NUM_DAYS[Settings.days] && Player.Day > 1)
+    Save_Game();
+  
+  if (Player.Day > NUM_DAYS[Settings.days] || Player.Damage >= 50)
+    persist_delete(PLAYER_DATA_KEY);
+  
   toast_layer_destroy(message_layer);
   number_window_destroy(number_window);
   menu_layer_destroy(home_menu_layer);
@@ -1280,18 +1292,10 @@ void window_unload(Window *window)
   for (unsigned int i = 0; i < NUM_MENU_ICONS; i++)
   {
     gbitmap_destroy(menu_icons[i]);
-  }	
+  }
+  
   gbitmap_destroy(game_icon);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Crash is after this...");
-
   free(p_NumWindowContext);
-  // Save Player Data
-  if (Player.Day < NUM_DAYS[Settings.days] && Player.Day > 1)
-    Save_Game();
-
-  if (Player.Day > NUM_DAYS[Settings.days] || Player.Damage >= 50)
-    persist_delete(PLAYER_DATA_KEY);
-
   app_sync_deinit(&sync);
 }
 
@@ -1395,11 +1399,7 @@ static void create_ui(void)
   }
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %u", sizeof(SETTINGS_DATA));
-/*
-#ifdef PBL_PLATFORM_APLITE
-  layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(inverter_layer));	
-#endif
-*/
+
   window_stack_push(window, true);
 }
 
@@ -1469,15 +1469,6 @@ void check_version(void)
   return;
 }
 
-void set_invert_layer(void)
-{
-  /*
-#ifdef PBL_PLATFORM_APLITE
-  layer_set_hidden(inverter_layer_get_layer(inverter_layer), !(Settings.invert));	
-#endif
-*/
-}
-
 int main(void)
 {
   srand(time(0));	
@@ -1489,8 +1480,6 @@ int main(void)
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked for Saves...");
   light_enable(Settings.light);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Light Enabled...");
-  set_invert_layer();
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inverter Layer Set...");
   app_event_loop();
   app_message_deregister_callbacks();		
   app_sync_deinit(&sync);

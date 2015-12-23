@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include <pebble_process_info.h>
-#undef APP_LOG
-#define APP_LOG(...)
+//#undef APP_LOG
+//#define APP_LOG(...)
 
 #ifdef PBL_PLATFORM_APLITE
   #undef  GColorLimerick
@@ -177,9 +177,9 @@ const char* chased_menu[7] =
 {
 	"%1i PIG",
 	"IN PERSUIT!!",
-	"AMMO         %2i",
-	"GUNS         %1i",
-	"DAMAGE %2i OF 50",
+	"AMMO",
+	"GUNS",
+	"DAMAGE",
 	"RUN",
 	"FIGHT"
 };

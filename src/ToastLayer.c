@@ -69,7 +69,7 @@ static void timer_callback(void *context)
 }
 
 void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
-{  
+{   
   this->is_visible = true;
 
   // Set up
@@ -106,13 +106,6 @@ void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
 
   // Auto hide
   app_timer_register(this->duration, timer_callback, this);
- 
-/*
-#ifdef PBL_PLATFORM_APLITE
-  layer_add_child(text_layer_get_layer(this->content_layer), inverter_layer_get_layer(this->burnt_toast_layer));
-  layer_set_hidden(inverter_layer_get_layer(this->burnt_toast_layer), !(Settings.invert));
-#endif
-*/
 }
 
 bool toast_layer_is_visible(ToastLayer *this)
