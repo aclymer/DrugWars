@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include <pebble_process_info.h>
-//#undef APP_LOG
-//#define APP_LOG(...)
+#undef APP_LOG
+#define APP_LOG(...)
 
 #ifdef PBL_PLATFORM_APLITE
   #undef  GColorLimerick
