@@ -27,24 +27,24 @@
 
 	typedef struct
   {
-		int duration;
-		bool is_visible;
-		GSize size;
-		GRect parent_bounds;
-		Window *parent;
-		TextLayer *bg_layer;
-		TextLayer *content_layer;
-		char *content_buffer;
+		int         duration;
+		bool        is_visible;
+		GSize       size;
+		GRect       parent_bounds;
+		Window      *parent;
+		TextLayer   *bg_layer;
+		TextLayer   *content_layer;
+		char  *content_buffer;
 	} ToastLayer;
 
 	// Create a ToastLayer and add it to the parent Window
-	ToastLayer* toast_layer_create(Window *parent);
+	ToastLayer*   toast_layer_create(Window *parent);
 
 	// Destroy a ToastLayer
 	void toast_layer_destroy(ToastLayer *this);
 
 	// Pop up the ToastLayer
-	void toast_layer_show(ToastLayer *this, char *message, int duration, int offset);
+	void toast_layer_show(ToastLayer *this, const char *message, int duration, int offset);
 
 	// Hide the ToastLayer
 	void toast_layer_hide(ToastLayer *this);

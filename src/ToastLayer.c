@@ -3,6 +3,7 @@
 
 ToastLayer* toast_layer_create(Window *parent)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Creating ToastLayer...");
   ToastLayer *this = malloc(sizeof(ToastLayer));
   this->parent = parent;
   this->parent_bounds = layer_get_bounds(window_get_root_layer(parent));
@@ -11,8 +12,7 @@ ToastLayer* toast_layer_create(Window *parent)
   text_layer_set_font(this->content_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(this->content_layer, GTextAlignmentCenter);
 
-  //this->burnt_toast_layer = inverter_layer_create(layer_get_bounds(text_layer_get_layer(this->content_layer)));
-
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Returning toast_layer...");
   return this;
 }
 
@@ -20,7 +20,6 @@ void toast_layer_destroy(ToastLayer *this)
 {
   text_layer_destroy(this->bg_layer);
   text_layer_destroy(this->content_layer);
-  //inverter_layer_destroy(this->burnt_toast_layer);
   free(this);
 }
 
@@ -68,7 +67,7 @@ static void timer_callback(void *context)
   this->is_visible = false;
 }
 
-void toast_layer_show(ToastLayer *this, char *message, int duration, int offset)
+void toast_layer_show(ToastLayer *this, const char *message, int duration, int offset)
 {   
   this->is_visible = true;
 

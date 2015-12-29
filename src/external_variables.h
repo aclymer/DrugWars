@@ -1,4 +1,6 @@
 #include <pebble.h>
+//#undef APP_LOG
+//#define APP_LOG(...)
 
 // Player Data
 typedef struct {

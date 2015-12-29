@@ -13,13 +13,13 @@ SETTINGS_DATA 		  Settings;
 PLAYER_DATA 		    Player;
 
 // AppSync setup
-static AppSync sync;
-static uint8_t sync_buffer[256];
+static              AppSync sync;
+static uint8_t      sync_buffer[256];
 
 // Main Game Event Generation fxn
 void Event_Generator(MenuIndex *cell_index)
 {
-  Player.Dice = (rand() % 21);
+  Player.Dice       = (rand() % 21);
 
   APP_LOG(APP_LOG_LEVEL_INFO, "HighScore Persist size: %i", persist_get_size(HIGH_SCORE_KEY));
   APP_LOG(APP_LOG_LEVEL_INFO, "Player Persist size: %i", persist_get_size(PLAYER_DATA_KEY));
@@ -36,29 +36,29 @@ void Event_Generator(MenuIndex *cell_index)
   switch(Player.Dice)
   {
     case 1:
-    toast_layer_show(message_layer, "RIVAL DEALERS ARE SELLING CHEAP LUDES!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    toast_layer_show(message_layer, messages[0], SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
     Player.Trenchcoat.Drug[LUDES].Price = rand() % 9 + 1;
     break;
 
     case 2:
-    toast_layer_show(message_layer, "WEED PRICES HAVE BOTTOMED OUT!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    toast_layer_show(message_layer, messages[1], SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
     Player.Trenchcoat.Drug[WEED].Price = (rand() % 28 + 13	) * 10	;
     break;
 
     case 3:
-    toast_layer_show(message_layer, "PIGS ARE SELLING CHEAP HEROINE FROM LAST WEEK'S RAID!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    toast_layer_show(message_layer, messages[2], SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
     Player.Trenchcoat.Drug[HEROINE].Price = rand() % 1151 + 850;
     break;
 
     case 4:
     case 5:
-    toast_layer_show(message_layer, "ADDICTS ARE BUYING HEROINE AT OUTRAGEOUS PRICES!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    toast_layer_show(message_layer, messages[3], SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
     Player.Trenchcoat.Drug[HEROINE].Price = rand() % 25001 + 18000;
     break;
 
     case 6:
     case 7:
-    toast_layer_show(message_layer, "PIGS MADE A BIG COKE BUST!\nPRICES ARE OUTRAGEOUS!\n", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    toast_layer_show(message_layer, messages[4], SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
     Player.Trenchcoat.Drug[COCAINE].Price = rand() % 30001 + 28000;
     break;
 
@@ -71,27 +71,24 @@ void Event_Generator(MenuIndex *cell_index)
     }
     if (X == 7)
     {
-      string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $10000000!") + 1) * sizeof(char));
-      snprintf(string,
-               (strlen("YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $10000000!") + 1) * sizeof(char),
+      string = malloc((strlen(messages[5]) + 6) * sizeof(char));
+      snprintf(string, sizeof string,
                "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i!",
-               (int) (Player.Money.Cash * 0.33333 + 0.5));
+               (int) (Player.Money.Cash / 3 + 1 / 2));
     }
     else if (X < 7)
     {
-      string = malloc((strlen("YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char));
-      snprintf(string,
-               (strlen("YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $10000000 AND 999 OF YOUR COCAINE!") + 1) * sizeof(char),
-               "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i AND %i OF YOUR %s!",
-               (int) (Player.Money.Cash * 0.33333 + 0.5),
-               (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5),
+      string = malloc((strlen(messages[6]) + 13) * sizeof(char));
+      snprintf(string, sizeof string,  messages[6],
+               (int) (Player.Money.Cash / 3 + 1 / 2),
+               (int) (Player.Trenchcoat.Drug[X].Quantity / 3 + 1 / 2),
                drug_names[X]);
 
-      Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity * 0.33333 + 0.5);
+      Player.Trenchcoat.Drug[X].Quantity -= (int) (Player.Trenchcoat.Drug[X].Quantity / 3 + 1 / 2);
     }
     toast_layer_show(message_layer, string, PUNISHMENT_DELAY, menu_header_heights[Player.MenuNumber]);
     free(string);
-    Player.Money.Cash -= (int) (Player.Money.Cash * 0.33333 + 0.5);
+    Player.Money.Cash -= (int) (Player.Money.Cash / 3 + 1 / 2);
     UpdateFreespace(cell_index);
     break;
 
@@ -105,13 +102,11 @@ void Event_Generator(MenuIndex *cell_index)
       if (Player.Dice == 11)	Player.Cops = 4;
       if (Settings.vibrate) vibes_double_pulse();
 
-      string = (char*)malloc((strlen("OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char));
+      string = malloc((strlen(messages[(Player.Cops > 1 ? 7 : 8)]) + 1) * sizeof(char));
       if (Player.Cops > 1)
-        snprintf(string, (strlen("OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!") + 1) * sizeof(char),
-                 "OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!", Player.Cops - 1);
+        snprintf(string, sizeof string, messages[7], Player.Cops - 1);
       else
-        snprintf(string, (strlen("OFFICER HARDASS IS AFTER YOU!") + 1) * sizeof(char),
-                 "OFFICER HARDASS IS AFTER YOU!");
+        strcpy(string, messages[8]);
       Player.MenuNumber = 8;
       toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
       free(string);
@@ -131,10 +126,7 @@ void Event_Generator(MenuIndex *cell_index)
                                               "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
                                               "WILL YOU BUY A \n%s \n FOR $%i? ")) + 1) * sizeof(char));
       strcat(confirm_header, gun_names[X]);
-      snprintf(confirm_header,
-               ((strlen( (Player.Trenchcoat.Guns[X].Quantity > 0 ?
-                          "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
-                          "WILL YOU BUY A \n%s \n FOR $%i? ")) + 1) * sizeof(char)),
+      snprintf(confirm_header, sizeof(confirm_header),
                          (Player.Trenchcoat.Guns[X].Quantity > 0 ?
                           "WILL YOU BUY AMMO FOR YOUR \n%s \nFOR $%i? " :
                           "WILL YOU BUY A \n%s \n FOR $%i? "),
@@ -288,6 +280,7 @@ void Show_Instructions(void *data)
 // With this, you can dynamically add and remove sections
 static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_get_num_sections_callback...");
   return NUM_MENU_SECTIONS;
 }
 
@@ -295,6 +288,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
 // You can also dynamically add and remove items using this
 uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_get_num_rows_callback...");
   switch(Player.MenuNumber)
   {
     case 0: 	return 7;		break;
@@ -314,6 +308,7 @@ uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_inde
 // A callback is used to specify the height of the section header
 int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_get_header_height_callback...");
   // This is a define provided in pebble.h that you may use for the default height
   return menu_header_heights[Player.MenuNumber];
 }
@@ -321,6 +316,7 @@ int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_
 // A callback is used to specify the height of the cell
 int16_t menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_get_cell_height_callback...");
   // This is a define provided in pebble.h that you may use for the default height
   switch(Player.MenuNumber)
   {
@@ -332,6 +328,7 @@ int16_t menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_ind
 // Here we draw what each header is
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_draw_header_callback...");
   // Deterine which section we're working with
   switch(Player.MenuNumber)
   {
@@ -445,6 +442,7 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 // This is the menu item draw callback where you specify what each item should look like
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_draw_row_callback...");
   int len = (strlen("9.999K") + 1) * sizeof(char);
   strval = (char*)malloc(11 * sizeof(char));
   switch(Player.MenuNumber)
@@ -604,6 +602,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 
 static void menu_selection_will_change_callback(MenuLayer *menu_layer, MenuIndex *new_cell_index, MenuIndex old_cell_index, void *data)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_selection_will_change_callback...");
   if (toast_layer_is_visible(message_layer))
     *new_cell_index = old_cell_index;
 }
@@ -611,11 +610,10 @@ static void menu_selection_will_change_callback(MenuLayer *menu_layer, MenuIndex
 // Here we capture when a user selects a menu item
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data)
 {	
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_select_callback...");
   if (toast_layer_is_visible(message_layer))
     return;
   
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "menu_select_layer(menu[%u], row[%i])", Player.MenuNumber, cell_index->row);
-
   if (Player.MenuNumber > 0 && Player.MenuNumber < 8 && cell_index->row == 0)
   {
     int temp = Player.MenuNumber - 1;
@@ -879,48 +877,9 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
   }
 }
 
-// This initializes the menu upon window load
-void window_load(Window *window)
-{
-  // Here we load the bitmap assets
-  // resource_init_current_app must be called before all asset loading
-  int num_menu_icons                            = 0;
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RETURN_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PRICES_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TRENCHCOAT_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SUBWAY_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOAN_SHARK_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANK_ICON);
-  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DWPD_ICON);
-  game_icon										                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
-
-  // Load custom font	
-  header_font 	                                = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-  cell_font                                     = fonts_get_system_font(FONT_KEY_GOTHIC_24);
-  subtitle_font 	                              = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-  confirm_font                                  = fonts_get_system_font(FONT_KEY_GOTHIC_24);
-
-  // Set all the callbacks for the menu layer
-  menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
-                           {
-                             .get_num_sections 	    = menu_get_num_sections_callback,
-                             .get_num_rows 		      = menu_get_num_rows_callback,
-                             .get_header_height     = menu_get_header_height_callback,
-                             .get_cell_height	      = menu_get_cell_height_callback,
-                             .draw_header 		      = menu_draw_header_callback,
-                             .draw_row 			        = menu_draw_row_callback,
-                             .select_click 		      = menu_select_callback,
-                             .selection_will_change = menu_selection_will_change_callback,
-                           });
-
-  // Bind the menu layer's click config provider to the window for interactivity
-  menu_layer_set_click_config_onto_window(home_menu_layer, window);
-}
-
 void number_window_selected_callback(struct NumberWindow *number_window, void *context)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "number_window_selected_callback...");
   switch(Player.MenuNumber)
   {
     case 3:		BuyDrugs(number_window_get_value(number_window), (MenuIndex*)context);	break;
@@ -960,6 +919,7 @@ void number_window_selected_callback(struct NumberWindow *number_window, void *c
 
 void number_window_incremented_callback(struct NumberWindow *number_window, void *context)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "number_window_incremented_callback...");
   int value = number_window_get_value(number_window);
 
   switch(Player.MenuNumber)
@@ -996,6 +956,7 @@ void number_window_incremented_callback(struct NumberWindow *number_window, void
 
 void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cell_index)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Num_Input...");
   *p_NumWindowContext 		= *cell_index;
   text_layer_set_text(number_window_title_text_layer, text);	
   number_window_set_max(number_window, high);
@@ -1009,12 +970,7 @@ void Num_Input(char *text, int high, int low, int delta, int set, MenuIndex *cel
 
   layer_add_child(number_window_root_layer, text_layer_get_layer(number_window_title_text_layer));
   layer_add_child(number_window_root_layer, text_layer_get_layer(number_window_value_text_layer));
-
-#ifdef PBL_PLATFORM_APLITE
-  window_set_background_color(number_window_root, GColorWhite);
-#else
-  window_set_background_color(number_window_root, GColorLimerick);
-#endif
+  window_set_background_color(number_window_root, PBL_IF_COLOR_ELSE(GColorLimerick, GColorWhite));
   window_stack_push(number_window_root, true);
 }
 
@@ -1148,12 +1104,13 @@ void Doctor(MenuIndex *cell_index)
 
 void Exit(MenuIndex *cell_index)
 {
-  toast_layer_show(message_layer, "\n\nTHANKS FOR PLAYING! \nREMEMBER TO WATCH YOUR BACK. \nPEACE!", LONG_MESSAGE_DELAY, 0);
+  //toast_layer_show(message_layer, "\n\nTHANKS FOR PLAYING! \nREMEMBER TO WATCH YOUR BACK. \nPEACE!", LONG_MESSAGE_DELAY, 0);
   window_stack_pop_all(true);
 }
 
 void UpdateFreespace(MenuIndex *cell_index)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "UpdateFreespace...");
   Player.Trenchcoat.Guns[TOTAL].Ammo = 0;
   Player.Trenchcoat.Guns[TOTAL].Quantity = 0;
   for (short i = 1; i < 4; i++)
@@ -1234,7 +1191,8 @@ void Save_Game(void)
 static void check_for_saved_game(void)
 {	
   // Check for saved game
-  if (persist_exists(PLAYER_DATA_KEY))
+  APP_LOG(APP_LOG_LEVEL_INFO, "check_for_saved_game...");
+  if (persist_exists(PLAYER_DATA_KEY) && persist_exists(PLAYER_SIZE_KEY))
   {
     persist_read_data(PLAYER_DATA_KEY, &Player, persist_read_int(PLAYER_SIZE_KEY));
     if (Player.MenuNumber != 8)
@@ -1255,22 +1213,50 @@ static void check_for_saved_game(void)
 
 void Load_Game(MenuIndex *cell_index)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Load_Game...");
   if (value == 8)
     Player.MenuNumber = value;
   else
     Player.MenuNumber = 0;
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Player MenuNumber: %i", Player.MenuNumber);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Player Size: %u", sizeof(Player));
-  APP_LOG(APP_LOG_LEVEL_INFO, "Settings:");
-  APP_LOG(APP_LOG_LEVEL_INFO, "Autosave - %i", Settings.autosave);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Vibrate - %i", Settings.vibrate);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Light - %i", Settings.light);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Days - %i", NUM_DAYS[Settings.days]);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Settings Size: %u", sizeof(Settings));
   menu_layer_reload_data(home_menu_layer);
 
   return;
+} 
+
+// This initializes the menu upon window load
+void window_load(Window *window)
+{
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Loading window...");
+  // Here we load the bitmap assets
+  // resource_init_current_app must be called before all asset loading
+  short num_menu_icons                          = 0;
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RETURN_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PRICES_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TRENCHCOAT_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUY_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SELL_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SUBWAY_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOAN_SHARK_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANK_ICON);
+  menu_icons[num_menu_icons++]                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DWPD_ICON);
+  game_icon										                  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAME_ICON);
+
+  // Set all the callbacks for the menu layer
+  menu_layer_set_callbacks(home_menu_layer, NULL, (MenuLayerCallbacks)
+                           {
+                             .get_num_sections 	    = menu_get_num_sections_callback,
+                             .get_num_rows 		      = menu_get_num_rows_callback,
+                             .get_header_height     = menu_get_header_height_callback,
+                             .get_cell_height	      = menu_get_cell_height_callback,
+                             .draw_header 		      = menu_draw_header_callback,
+                             .draw_row 			        = menu_draw_row_callback,
+                             .select_click 		      = menu_select_callback,
+                             .selection_will_change = menu_selection_will_change_callback,
+                           });
+
+  // Bind the menu layer's click config provider to the window for interactivity
+  menu_layer_set_click_config_onto_window(home_menu_layer, window);
 }
 
 void window_unload(Window *window) 
@@ -1304,69 +1290,49 @@ static void destroy_ui(void)
 
 static void create_ui(void)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "create_ui...");
   window 				= window_create();
 
   if (window == NULL)
   {
     window_stack_pop_all(true);
-    return;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Window was NULL...");
+    window = window_create();
   }
+  else
+    window_stack_push(window, true);  
   
-#ifdef PBL_PLATFORM_APLITE
-  window_set_background_color(window, GColorWhite);
-#else
-  window_set_background_color(window, GColorLimerick);
-#endif
+  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLimerick, GColorWhite));
   
   GRect	bounds = layer_get_frame(window_get_root_layer(window));
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Window bounds: origin.x-%d, origin.y-%d, size.w-%d, size.h-%d\n", bounds.origin.x, bounds.origin.y, bounds.size.w, bounds.size.h);
-  
   p_NumWindowContext 	= malloc(sizeof(MenuCallback));
 
   // Create the menu layer
   home_menu_layer 	= menu_layer_create(bounds);
   
-#ifdef PBL_PLATFORM_APLITE
   menu_layer_pad_bottom_enable(home_menu_layer, false);
-  menu_layer_set_normal_colors(home_menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(home_menu_layer, GColorLightGray, GColorBlack);
-#else
-  menu_layer_pad_bottom_enable(home_menu_layer, false);
-  menu_layer_set_normal_colors(home_menu_layer, GColorCeleste, GColorLimerick);
-  menu_layer_set_highlight_colors(home_menu_layer, GColorLimerick, GColorWhite);
-#endif
-  
+  menu_layer_set_normal_colors(home_menu_layer, PBL_IF_COLOR_ELSE(GColorCeleste, GColorWhite), PBL_IF_COLOR_ELSE(GColorLimerick, GColorBlack));
+  menu_layer_set_highlight_colors(home_menu_layer, PBL_IF_COLOR_ELSE(GColorLimerick, GColorLightGray), PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
+
   // Add it to the window for display
   layer_add_child(window_get_root_layer(window), menu_layer_get_layer(home_menu_layer));
 
   number_window 		= number_window_create(NULL, (NumberWindowCallbacks) 
-                                           {.selected 	= number_window_selected_callback,
+                                           {.selected 	  = number_window_selected_callback,
                                             .incremented 	= number_window_incremented_callback,
                                             .decremented 	= number_window_incremented_callback
                                            }, p_NumWindowContext);
 
   // Create Number window title text overlay
-  number_window_title_text_layer		= text_layer_create(GRect(0,10,115,133));
-  
-#ifdef PBL_PLATFORM_APLITE	
-  text_layer_set_background_color(number_window_title_text_layer, GColorWhite);
-#else
-  text_layer_set_background_color(number_window_title_text_layer, GColorLimerick);
-#endif
-  
+  number_window_title_text_layer		= text_layer_create(GRect(0,10,115,133));  
+  text_layer_set_background_color(number_window_title_text_layer, PBL_IF_COLOR_ELSE(GColorLimerick, GColorWhite));  
   text_layer_set_font(number_window_title_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(number_window_title_text_layer, GTextAlignmentCenter);
 
   // Create Number window value text overlay
-  number_window_value_text_layer = text_layer_create(GRect(0,70,115,60));
-  
-#ifdef PBL_PLATFORM_APLITE	
-  text_layer_set_background_color(number_window_value_text_layer, GColorWhite);
-#else
-  text_layer_set_background_color(number_window_value_text_layer, GColorLimerick);
-#endif
-  
+  number_window_value_text_layer = text_layer_create(GRect(0,70,115,60));  
+  text_layer_set_background_color(number_window_value_text_layer, PBL_IF_COLOR_ELSE(GColorLimerick, GColorWhite));  
   text_layer_set_font(number_window_value_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(number_window_value_text_layer, GTextAlignmentCenter);
 
@@ -1383,61 +1349,45 @@ static void create_ui(void)
                              });
 
   if (persist_exists(SETTINGS_DATA_KEY))
-  {
     persist_read_data(SETTINGS_DATA_KEY, &Settings, sizeof(SETTINGS_DATA));
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data exists...");
-  }
   else
   {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "%s", "Settings persist data does not exist...");
     Settings.vibrate 	= false;
     Settings.autosave	= false;
     Settings.light		= false;
     Settings.days		  = 0;
     
-    persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
+    persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(SETTINGS_DATA));
+    psleep(40);
   }
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "Size of SETTINGS_DATA: %u", sizeof(SETTINGS_DATA));
-
-  window_stack_push(window, true);
 }
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sync Tuple changed...");
   switch (key)
   {
     case VERSION:
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %s", key, new_tuple->value->cstring);
     version = malloc((strlen(new_tuple->value->cstring) + 1) * sizeof(char));
     strcpy(version, new_tuple->value->cstring);
     break;
 
     case VIBRATE:
     ((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.vibrate);
     break;
 
     case LIGHT:
     ((SETTINGS_DATA*) context)->light = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.light);
     light_enable(Settings.light);
     break;
 
     case DAYS:
     ((SETTINGS_DATA*) context)->days = (int) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.days);
     break;
 
     case AUTOSAVE:
     ((SETTINGS_DATA*) context)->autosave = (bool) new_tuple->value->uint8;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, Settings.autosave);
     break;
-    
-    case 5:
-    APP_LOG(APP_LOG_LEVEL_INFO, "Sync tuple changed... Key: %lu Value: %i", key, new_tuple->value->uint8);
-    break;
-    
   }
 
   persist_write_data(SETTINGS_DATA_KEY, &Settings, sizeof(Settings));
@@ -1445,20 +1395,17 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
 {
-  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "App Message Sync Error: %d", app_message_error);
-  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Dictionary Result Error: %d", dict_error);
+  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Sync Error: %d", app_message_error);
+  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Dictionary Error: %d", dict_error);
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context)
 {  
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox received...");
   Tuple *ready_tuple = dict_find(iter, 5);
   
   if (ready_tuple)
   {
-    APP_LOG(APP_LOG_LEVEL_INFO, "major: %i minor: %i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
-    
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Version string sent = %s", version);
-  
     Tuplet initial_values[] = {
       TupletCString(0, version),
       TupletInteger(1, Settings.vibrate),
@@ -1467,7 +1414,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context)
       TupletInteger(4, Settings.autosave),
     };
   
-    APP_LOG(APP_LOG_LEVEL_INFO, "Tuplet Initial Size: %u", sizeof(initial_values));
     app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
                   sync_tuple_changed_callback, sync_error_callback, &Settings);
     
@@ -1477,8 +1423,9 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context)
 
 void check_version(void)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Checking Version...");
   app_message_register_inbox_received(inbox_received_handler); 
-  app_message_open(100, 100);
+  app_message_open(128, 128);
   version = malloc( 5 * sizeof(char));
   snprintf(version, 5 * sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
    
@@ -1490,12 +1437,14 @@ int main(void)
   srand(time(0));	
   check_version();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked Version...");
-  create_ui();
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");
   check_for_saved_game();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Checked for Saves...");
   light_enable(Settings.light);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Light Enabled...");
+  create_ui();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "UI Created...");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "free %i", heap_bytes_free());
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "heap %i", heap_bytes_used());
   app_event_loop();
   app_message_deregister_callbacks();		
   app_sync_deinit(&sync);
@@ -1510,7 +1459,7 @@ int main(void)
   //free(confirm_header);
   //free(&Player);
   //free(&Settings);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Length (string): %u (format): %u (confirm_header): %u (version): %u", sizeof(string), sizeof(format), sizeof(confirm_header), sizeof(version));
+  
   return 0;
 }
 
@@ -1528,6 +1477,7 @@ int LOG10(int val)
 
 int EXP(int val)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "EXP...");
   int temp = 1;
   for (int i = 0; i < val; i++)
     temp *= 10;	
@@ -1536,6 +1486,7 @@ int EXP(int val)
 
 void floatstrcat(char* str, double val, int precision)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "floatstrcat...");
   double Y = val / EXP(LOG10(val) - LOG10(val) % 3);
   if (precision > 3) precision = 3;
   str += strlen(str);
@@ -1583,14 +1534,16 @@ void floatstrcat(char* str, double val, int precision)
 // Menu Header Draw function for Title only
 void menu_header_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_header_simple_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect titleOrigin = layer_get_bounds(cell_layer);
-  graphics_draw_text(ctx, title, header_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, title, HEADER_FONT, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 // Menu Header Draw function for Icon and Title
 void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_header_simple_icon_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   GRect bitmap_bounds 		  = gbitmap_get_bounds(bitmap);
@@ -1601,12 +1554,8 @@ void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const 
   title_bounds.origin.x 		= 26 - (26 - bitmap_bounds.size.w) / 2;
   title_bounds.size.w			  -= bitmap_bounds.size.w + bitmap_bounds.origin.x * 2;
   title_bounds.origin.y		  -= 1;
-  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-#ifdef PBL_PLATFORM_APLITE
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-#else
-  graphics_context_set_stroke_color(ctx, GColorDarkCandyAppleRed);
-#endif
+  graphics_draw_text(ctx, title, HEADER_FONT, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack));
   graphics_draw_line(ctx,  (GPoint){.x = 0  , .y = title_bounds.origin.y + title_bounds.size.h},
                            (GPoint){.x = 144, .y = title_bounds.origin.y + title_bounds.size.h});
 }
@@ -1614,6 +1563,7 @@ void menu_header_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const 
 // Menu Header Draw function for Icon, Title, and Subtitle
 void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_header_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   GRect bitmap_bounds 		  = gbitmap_get_bounds(bitmap);
@@ -1631,14 +1581,10 @@ void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title,
   subtitle_bounds.origin.x 	= title_bounds.origin.x;
   subtitle_bounds.origin.y	= title_bounds.size.h / 2 - 5;
   subtitle_bounds.size.w		= title_bounds.size.w;
-  graphics_draw_text(ctx, title, header_font, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-  graphics_draw_text(ctx, subtitle, cell_font, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, title, HEADER_FONT, title_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, subtitle, CELL_FONT, subtitle_bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
   GRect bar_bounds 			  = layer_get_bounds(cell_layer);
-#ifdef PBL_PLATFORM_APLITE
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-#else
-  graphics_context_set_stroke_color(ctx, GColorDarkCandyAppleRed);
-#endif
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack));
   graphics_draw_line(ctx,  (GPoint){.x = 0  , .y = bar_bounds.origin.y + bar_bounds.size.h - 1},
                            (GPoint){.x = 144, .y = bar_bounds.origin.y + bar_bounds.size.h - 1});
 }
@@ -1646,16 +1592,13 @@ void menu_header_draw(GContext* ctx, const Layer *cell_layer, const char *title,
 // Menu Header Draw function for long title only
 void menu_header_long_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_header_long_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect titleOrigin         = layer_get_bounds(cell_layer);
   titleOrigin.size.h        = menu_header_heights[Player.MenuNumber];
-  graphics_draw_text(ctx, title, confirm_font, titleOrigin, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, title, CONFIRM_FONT, titleOrigin, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
   GRect title_bounds 			  = layer_get_bounds(cell_layer);
-#ifdef PBL_PLATFORM_APLITE
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-#else
-  graphics_context_set_stroke_color(ctx, GColorDarkCandyAppleRed);
-#endif
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack));
   graphics_draw_line(ctx,  (GPoint){.x = 0  , .y = title_bounds.origin.y + title_bounds.size.h - 1},
                            (GPoint){.x = 144, .y = title_bounds.origin.y + title_bounds.size.h - 1});
 }
@@ -1663,36 +1606,40 @@ void menu_header_long_draw(GContext* ctx, const Layer *cell_layer, const char *t
 // Menu Row Draw function for Title only
 void menu_cell_simple_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_cell_simple_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect titleOrigin      = layer_get_bounds(cell_layer);
   titleOrigin.origin.y   += TEXT_ORIGIN_Y_SHIFT;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, title, CELL_FONT, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 // Menu Row Draw function Rt_Aligned
 void menu_cell_value_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* value)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_cell_value_draw...");
   menu_cell_simple_draw(ctx, cell_layer, title);
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect valueOrigin      = layer_get_bounds(cell_layer);
   valueOrigin.origin.y   += TEXT_ORIGIN_Y_SHIFT;
-  graphics_draw_text(ctx, value, cell_font, valueOrigin, GTextOverflowModeFill, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, value, CELL_FONT, valueOrigin, GTextOverflowModeFill, GTextAlignmentRight, NULL);
 }
 
 // Menu Row Draw function for Title only (Centered)
 void menu_cell_simple_centered_draw(GContext* ctx, const Layer *cell_layer, const char *title)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_cell_simple_centered_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   GRect titleOrigin      = layer_get_bounds(cell_layer);
   titleOrigin.origin.x   = 26;
   titleOrigin.size.w     = 144 - titleOrigin.origin.x * 2;
   titleOrigin.origin.y   += TEXT_ORIGIN_Y_SHIFT;
-  graphics_draw_text(ctx, title, confirm_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, title, CONFIRM_FONT, titleOrigin, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
 // Menu Row Draw function for Icon and Title
 void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const char *title, const GBitmap* bitmap)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_cell_simple_icon_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   GRect bitmap_bounds 	  = gbitmap_get_bounds(bitmap);
@@ -1702,7 +1649,7 @@ void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const ch
   graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
   titleOrigin.origin.x 	  = 26;
   titleOrigin.origin.y 	  += TEXT_ORIGIN_Y_SHIFT;
-  graphics_draw_text(ctx, title, cell_font, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, title, CELL_FONT, titleOrigin, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
 //! Menu row drawing function to draw a basic cell with the title, subtitle, and icon. 
@@ -1714,6 +1661,7 @@ void menu_cell_simple_icon_draw(GContext* ctx, const Layer *cell_layer, const ch
 //! @param icon Draws an icon to the left of the text.
 void menu_cell_draw(GContext* ctx, const Layer *cell_layer, const char *title, const char* subtitle, const GBitmap* bitmap)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "menu_cell_draw...");
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   GRect bitmap_bounds 	  = gbitmap_get_bounds(bitmap);
@@ -1722,5 +1670,5 @@ void menu_cell_draw(GContext* ctx, const Layer *cell_layer, const char *title, c
   graphics_draw_bitmap_in_rect(ctx, bitmap, bitmap_bounds);
   title_bounds.origin.x 	= 26;
   title_bounds.origin.y 	+= TEXT_ORIGIN_Y_SHIFT;
-  graphics_draw_text(ctx, title, cell_font, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, title, CELL_FONT, title_bounds, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }

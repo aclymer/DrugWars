@@ -1,7 +1,5 @@
 #include <pebble.h>
 #include <pebble_process_info.h>
-#undef APP_LOG
-#define APP_LOG(...)
 
 #ifdef PBL_PLATFORM_APLITE
   #undef  GColorLimerick
@@ -61,10 +59,14 @@ enum KEYS {
 #define LONG_MESSAGE_DELAY			    	5000
 #define PUNISHMENT_DELAY			      	10000
 
+#define HEADER_FONT                   fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD)
+#define CELL_FONT                     fonts_get_system_font(FONT_KEY_GOTHIC_24)
+#define CONFIRM_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_24)
+
 MenuLayer 		  *home_menu_layer;
 MenuIndex 		  *p_NumWindowContext = NULL;
-GBitmap 		    *menu_icons[NUM_MENU_ICONS];
-GBitmap 		    *game_icon = NULL;
+static GBitmap 	*menu_icons[NUM_MENU_ICONS];
+static GBitmap 	*game_icon = NULL;
 
 // Get app version info
 extern const    PebbleProcessInfo __pbl_app_info;
@@ -74,10 +76,6 @@ int				      value, X, Y, Score;
 bool			      num_window_is_visible;
 short 			    current_icon;
 short			      menu_number = 0;
-GFont 			    header_font;
-GFont 			    cell_font;
-GFont 			    subtitle_font;
-GFont			      confirm_font;
 
 // HighScore Array
 int high_scores[4];
@@ -110,6 +108,20 @@ const char* drug_names[7] =
  	"WEED",
  	"SPEED",
 	"LUDES",
+};
+
+// Messages
+const char* messages[9] = 
+{
+  "RIVAL DEALERS ARE SELLING CHEAP LUDES!\n",
+  "WEED PRICES HAVE BOTTOMED OUT!\n",
+  "PIGS ARE SELLING CHEAP HEROINE FROM LAST WEEK'S RAID!\n",
+  "ADDICTS ARE BUYING HEROINE AT OUTRAGEOUS PRICES!\n",
+  "PIGS MADE A BIG COKE BUST!\nPRICES ARE OUTRAGEOUS!\n",
+  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i!",
+  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i AND %i OF YOUR %s!",
+  "OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!",
+  "OFFICER HARDASS IS AFTER YOU!"
 };
 
 // Gun Names

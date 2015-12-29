@@ -17,18 +17,21 @@
         "media": [
             {
                 "file": "images/menu_icon.png",
+                "memoryFormat": "Smallest",
                 "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
-                    "basalt",
-                    "chalk"
+                    "basalt"
                 ],
                 "type": "bitmap"
             },
             {
                 "file": "images/Bank.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_BANK_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -37,7 +40,9 @@
             },
             {
                 "file": "images/DWPD.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_DWPD_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -46,7 +51,9 @@
             },
             {
                 "file": "images/Shark.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_LOAN_SHARK_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -55,7 +62,9 @@
             },
             {
                 "file": "images/Sell.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_SELL_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -64,7 +73,9 @@
             },
             {
                 "file": "images/Buy.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_BUY_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -73,7 +84,9 @@
             },
             {
                 "file": "images/Return.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_RETURN_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -82,7 +95,9 @@
             },
             {
                 "file": "images/Trenchcoat.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_TRENCHCOAT_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -91,7 +106,9 @@
             },
             {
                 "file": "images/Subway.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_SUBWAY_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -100,7 +117,9 @@
             },
             {
                 "file": "images/Rx.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_GAME_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
@@ -109,7 +128,9 @@
             },
             {
                 "file": "images/Prices.png",
+                "memoryFormat": "Smallest",
                 "name": "IMAGE_PRICES_ICON",
+                "spaceOptimization": "memory",
                 "targetPlatforms": [
                     "aplite",
                     "basalt"
