@@ -1,16 +1,6 @@
 #include <pebble.h>
 #include <pebble_process_info.h>
 
-#ifdef PBL_PLATFORM_APLITE
-  #undef  GColorLimerick
-	#define GColorLimerick 				GColorWhite
-	#undef  GColorCeleste
-	#define GColorCeleste 				GColorWhite
-  #undef  GColorDarkCandyAppleRed
-	#define GColorDarkCandyAppleRed 	GColorBlack
-#endif
-
-
 typedef enum ITEMS {
 	TOTAL			    	= 0,
  	COCAINE 		  	= 1,
@@ -65,8 +55,8 @@ enum KEYS {
 
 MenuLayer 		  *home_menu_layer;
 MenuIndex 		  *p_NumWindowContext = NULL;
-static GBitmap 	*menu_icons[NUM_MENU_ICONS];
-static GBitmap 	*game_icon = NULL;
+GBitmap 	      *menu_icons[NUM_MENU_ICONS];
+GBitmap 	      *game_icon = NULL;
 
 // Get app version info
 extern const    PebbleProcessInfo __pbl_app_info;
@@ -80,11 +70,11 @@ short			      menu_number = 0;
 // HighScore Array
 int high_scores[4];
 								
-const short NUM_DAYS[4] = {30, 15, 45, 60};
-const char postfix[4] 	= {'\0','K', 'M', 'B'};
+const short     NUM_DAYS[4] = {30, 15, 45, 60};
+const char      postfix[4] 	= {' ','K', 'M', 'B'};
 
 // Menu Header Heights
-const short menu_header_heights[10] =
+const short     menu_header_heights[10] =
 {
 	MENU_CELL_BASIC_HEADER_HT			,
 	MENU_CELL_BASIC_HEADER_HT			, 
@@ -111,26 +101,27 @@ const char* drug_names[7] =
 };
 
 // Messages
-const char* messages[9] = 
+const char* messages[10] = 
 {
+  "DRUGWARS\nFOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",
   "RIVAL DEALERS ARE SELLING CHEAP LUDES!\n",
-  "WEED PRICES HAVE BOTTOMED OUT!\n",
-  "PIGS ARE SELLING CHEAP HEROINE FROM LAST WEEK'S RAID!\n",
-  "ADDICTS ARE BUYING HEROINE AT OUTRAGEOUS PRICES!\n",
-  "PIGS MADE A BIG COKE BUST!\nPRICES ARE OUTRAGEOUS!\n",
   "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i!",
   "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i AND %i OF YOUR %s!",
   "OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!",
-  "OFFICER HARDASS IS AFTER YOU!"
+  "OFFICER HARDASS IS AFTER YOU!",
+  "WILL YOU BUY\n%s AMMO FOR $%i?",
+  "WILL YOU BUY A \n%s \n FOR $%i? ",
+  "WILL YOU BUY A BIGGER TRENCHCOAT FOR $%i?",
+  "YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!"
 };
 
 // Gun Names
 const char* gun_names[4] =
 {
-	"Total\0",
-	".38 SPECIAL\0",
-	".44 MAGNUM\0",
-	"BARETTA 9MM\0"
+	"Total",
+	".38 SPECIAL",
+	".44 MAGNUM ",
+	"BARETTA 9MM"
 };
 
 // Home Menu

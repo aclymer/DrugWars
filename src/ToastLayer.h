@@ -44,10 +44,10 @@
 	void toast_layer_destroy(ToastLayer *this);
 
 	// Pop up the ToastLayer
-	void toast_layer_show(ToastLayer *this, const char *message, int duration, int offset);
+	void toast_layer_show(ToastLayer *this, char *message, int duration, int offset);
 
 	// Hide the ToastLayer
-	void toast_layer_hide(ToastLayer *this);
+	//void toast_layer_hide(void *context);
 
 	// Determine if the ToastLayer is still visible
 	bool toast_layer_is_visible(ToastLayer *this);

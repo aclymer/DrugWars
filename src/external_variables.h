@@ -1,6 +1,8 @@
 #include <pebble.h>
-//#undef APP_LOG
-//#define APP_LOG(...)
+#undef APP_LOG
+#define APP_LOG(...)
+#define safe_memory_free(pointer_address) do{if(pointer_address != NULL && *pointer_address != NULL){free(*pointer_address);*pointer_address = NULL;}}while(0)
+#define safe_free(pointer) safe_memory_free((void **) &(pointer))
 
 // Player Data
 typedef struct {
