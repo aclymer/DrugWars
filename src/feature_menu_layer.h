@@ -101,18 +101,20 @@ const char* drug_names[7] =
 };
 
 // Messages
-const char* messages[10] = 
+const char* messages[12] = 
 {
-  "DRUGWARS\nFOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",
-  "RIVAL DEALERS ARE SELLING CHEAP LUDES!\n",
-  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i!",
-  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i AND %i OF YOUR %s!",
-  "OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!",
-  "OFFICER HARDASS IS AFTER YOU!",
-  "WILL YOU BUY\n%s AMMO FOR $%i?",
-  "WILL YOU BUY A \n%s \n FOR $%i? ",
-  "WILL YOU BUY A BIGGER TRENCHCOAT FOR $%i?",
-  "YOU FOUND %i UNITS OF COCAINE ON A DEAD DUDE IN THE SUBWAY!"
+  "DRUGWARS\nFOR PEBBLE\nv%s\nBY A.CLYMER\n2015\nCOLORADO ,USA",      // 0
+  "RIVAL DEALERS ARE SELLING CHEAP LUDES!\n",                         // 1
+  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i!",                    // 2
+  "YOU WERE MUGGED IN THE SUBWAY!\nYOU LOST $%i AND %i OF YOUR %s!",  // 3
+  "OFFICER HARDASS AND %i DEPUTIES ARE AFTER YOU!",                   // 4
+  "OFFICER HARDASS IS AFTER YOU!",                                    // 5
+  "WILL YOU BUY\n%s AMMO FOR $%i?",                                   // 6
+  "WILL YOU BUY A \n%s \n FOR $%i? ",                                 // 7
+  "WILL YOU BUY A BIGGER TRENCHCOAT FOR $%i?",                        // 8
+  "YOU FOUND %i UNITS OF %s ON A DEAD DUDE IN THE SUBWAY!",           // 9
+  "THERE'S SOME WEED HERE THAT SMELLS DANK!",                         // 10
+  "WANNA SMOKE IT?"                                                   // 11
 };
 
 // Gun Names

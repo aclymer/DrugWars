@@ -15,7 +15,7 @@ PLAYER_DATA 		    Player;
 // Main Game Event Generation fxn
 void Event_Generator(MenuIndex *cell_index)
 {
-  Player.Dice++;//Player.Dice       = (rand() % 21);
+  Player.Dice       = (rand() % 21);
 
   Player.Trenchcoat.Drug[COCAINE].Price 	= (rand() % 12001	+ 16000	)		    ;
   Player.Trenchcoat.Drug[HEROINE].Price 	= (rand() % 7001	+ 5000	)		    ;
@@ -55,22 +55,23 @@ void Event_Generator(MenuIndex *cell_index)
 
     case 8:
     if (Settings.vibrate) vibes_short_pulse();
-    for (X = 1; X < 8; X++)
+    for (X = 1; X < 7; X++)
     {
       if (Player.Trenchcoat.Drug[X].Quantity > 0)
         break;
     }
     if (X == 7)
     {
-      string = malloc((strlen(messages[2]) + 6) * sizeof(char));
-      snprintf(string, (strlen(messages[2]) + 6) * sizeof(char),
+      string = (char*)malloc((strlen(messages[2]) + LOG10((int) Player.Money.Cash / 3 + 1 / 2)) * sizeof(char));
+      snprintf(string, (strlen(messages[2]) + LOG10((int) Player.Money.Cash / 3 + 1 / 2)) * sizeof(char),
                messages[2],
                (int) (Player.Money.Cash / 3 + 1 / 2));
     }
-    else if (X < 7)
+    else
     {
-      string = malloc((strlen(messages[3]) + 13) * sizeof(char));
-      snprintf(string, (strlen(messages[3]) + 13) * sizeof(char),  messages[3],
+      string = (char*)malloc((strlen(drug_names[X]) + strlen(messages[3]) + LOG10((int) Player.Money.Cash / 3 + 1 / 2)) * sizeof(char));
+      snprintf(string, (strlen(drug_names[X]) + strlen(messages[3]) + LOG10((int) Player.Money.Cash / 3 + 1 / 2)) * sizeof(char),
+               messages[3],
                (int) (Player.Money.Cash / 3 + 1 / 2),
                (int) (Player.Trenchcoat.Drug[X].Quantity / 3 + 1 / 2),
                drug_names[X]);
@@ -93,7 +94,7 @@ void Event_Generator(MenuIndex *cell_index)
       if (Player.Dice == 11)	Player.Cops = 4;
       if (Settings.vibrate) vibes_double_pulse();
 
-      string = malloc((strlen(messages[(Player.Cops > 1 ? 4 : 5)]) + 1) * sizeof(char));
+      string = (char*)malloc((strlen(messages[(Player.Cops > 1 ? 4 : 5)]) + 1) * sizeof(char));
       if (Player.Cops > 1)
         snprintf(string, (strlen(messages[4]) + 1) * sizeof(char), messages[4], Player.Cops - 1);
       else
@@ -113,7 +114,7 @@ void Event_Generator(MenuIndex *cell_index)
         && Player.Trenchcoat.Freespace >= Player.Trenchcoat.Guns[X].Capacity
         + (Player.Trenchcoat.Guns[X].Quantity > 0 ? 0 : 5))
     {
-      confirm_header = malloc((strlen(messages[6]) + strlen(gun_names[X]) + 1) * sizeof(char));
+      confirm_header = (char*)malloc((strlen(messages[6]) + strlen(gun_names[X]) + 1) * sizeof(char));
       snprintf(confirm_header,
                (strlen(messages[6]) + strlen(gun_names[X]) + 1) * sizeof(char),
                (Player.Trenchcoat.Guns[X].Quantity > 0 ? messages[6] : messages[7]),
@@ -128,19 +129,22 @@ void Event_Generator(MenuIndex *cell_index)
     break;
 
     case 14:
-    toast_layer_show(message_layer, "THERE'S SOME WEED HERE THAT SMELLS DANK!", SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);	
-    confirm_header = malloc((strlen("WANNA SMOKE IT?") + 1) * sizeof(char));
-    strcpy(confirm_header, "WANNA SMOKE IT?");
+    string = (char*)malloc((strlen(messages[10]) + 1) * sizeof(char));
+    strcpy(string, messages[10]);
+    toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+    confirm_header = (char*)malloc((strlen(messages[11]) + 1) * sizeof(char));
+    strcpy(confirm_header, messages[11]);
     p_MenuCallbackContext[0] = NULL;
     p_MenuCallbackContext[1] = &Smoke_It;
     Player.MenuNumber = 9;
     menu_layer_reload_data(home_menu_layer);
+    safe_free(string);
     break;
 
     case 15:
     if (Player.Money.Cash >= 300)
     {
-      confirm_header = malloc((strlen(messages[8]) + 2) * sizeof(char));
+      confirm_header = (char*)malloc((strlen(messages[8]) + 2) * sizeof(char));
       snprintf(confirm_header, (strlen(messages[8]) + 2) * sizeof(char), messages[8], Player.Trenchcoat.Capacity * 2);
       p_MenuCallbackContext[0] = NULL;
       p_MenuCallbackContext[1] = &Buy_Trenchcoat;
@@ -154,16 +158,16 @@ void Event_Generator(MenuIndex *cell_index)
     {
       X = rand() % 6 + 1; // [1-6]
       int Y = rand() % 8 + 1; // [1-8]
-      string = (char*)malloc((strlen(messages[9]) + 6) * sizeof(char));
+      Player.Trenchcoat.Drug[X].Quantity += Y;
+      string = (char*)malloc((strlen(drug_names[X]) + strlen(messages[9]) + LOG10(Y)) * sizeof(char));
       snprintf(string,
-               (strlen(messages[9]) + 6) * sizeof(char),
+               (strlen(messages[9]) + LOG10(Y)) * sizeof(char),
                messages[9],
                Y,
                drug_names[X]
               );				
       toast_layer_show(message_layer, string, LONG_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
       safe_free(string);
-      Player.Trenchcoat.Drug[X].Quantity += Y;
       UpdateFreespace(cell_index);
       return;
     }
@@ -184,7 +188,7 @@ void Event_Generator(MenuIndex *cell_index)
 void Intro(MenuIndex *cell_index)
 {
   Player.MenuNumber = 0;
-  string = malloc((strlen(messages[0]) + 1) * sizeof(char));
+  string = (char*)malloc((strlen(messages[0]) + 1) * sizeof(char));
   snprintf(string, (strlen(messages[0]) + 1) * sizeof(char), messages[0], version);
   toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, 0);
   app_timer_register(SHORT_MESSAGE_DELAY, &Show_Instructions, NULL);
@@ -253,7 +257,7 @@ void Intro(MenuIndex *cell_index)
 // Display Instruction Layer
 void Show_Instructions(void *data)
 {
-  confirm_header = malloc((strlen("\nWOULD YOU LIKE TO SEE THE INSTRUCTIONS?") + 1) * sizeof(char));
+  confirm_header = (char*)malloc((strlen("\nWOULD YOU LIKE TO SEE THE INSTRUCTIONS?") + 1) * sizeof(char));
   strcpy(confirm_header, "\nWOULD YOU LIKE TO SEE THE INSTRUCTIONS?");
   p_MenuCallbackContext[0]                    = NULL;
   p_MenuCallbackContext[1]                    = &show_instructions_layer;
@@ -799,7 +803,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
       if (Player.Cops < 1 && Player.Money.Cash >= 1200 && Player.Damage > 0)
       {
         int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-        confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
+        confirm_header = (char*)malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
         snprintf(confirm_header,
                  (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
                  "WILL YOU PAY $%i FOR A DOCTOR TO SEW YOU UP?",
@@ -965,14 +969,14 @@ void Buy_Gun(MenuIndex *cell_index)
 void Smoke_It(MenuIndex *cell_index)
 {
   if (Settings.vibrate) vibes_short_pulse();
-  toast_layer_show(message_layer, "YOU HALLUCINATE, STUMBLE ON TO THE TRACKS AND GET HIT BY A TRAIN!",
-                   LONG_MESSAGE_DELAY, menu_header_heights[0]);
+  toast_layer_show(message_layer, "YOU HALLUCINATE, STUMBLE ON TO THE TRACKS AND GET HIT BY A TRAIN!", LONG_MESSAGE_DELAY, menu_header_heights[0]);
+  safe_free(confirm_header);
   app_timer_register(LONG_MESSAGE_DELAY + TOAST_LAYER_ANIM_DURATION, (void*)Game_Over, cell_index);
 }
 
 void Being_Shot(MenuIndex *cell_index)
 {
-  format = malloc((strlen("YOU'VE BEEN KILLED!") + 1) * sizeof(char));
+  format = (char*)malloc((strlen("YOU'VE BEEN KILLED!") + 1) * sizeof(char));
   X = rand() % 2;
   if (X == 0)
     if (Player.Cops < 2)
@@ -992,13 +996,13 @@ void Being_Shot(MenuIndex *cell_index)
     if (Settings.vibrate) vibes_short_pulse();
   }
 
-  string = malloc((strlen("THEY'RE FIRING AT YOU!\nYOU'VE BEEN KILLED!") + 1) * sizeof(char));
+  string = (char*)malloc((strlen("THEY'RE FIRING AT YOU!\nYOU'VE BEEN KILLED!") + 1) * sizeof(char));
   if (Player.Cops < 2)
     snprintf(string, (strlen("HE'S FIRING AT YOU!\nYOU'VE BEEN KILLED!") + 1) * sizeof(char), "HE'S FIRING AT YOU!\n%s", format);
   else
     snprintf(string, (strlen("THEY'RE FIRING AT YOU!\nYOU'VE BEEN KILLED!") + 1) * sizeof(char), "THEY'RE FIRING AT YOU!\n%s", format);
-  safe_free(format);
   toast_layer_show(message_layer, string, SHORT_MESSAGE_DELAY, menu_header_heights[Player.MenuNumber]);
+  safe_free(format);
   safe_free(string);
   return;
 }
@@ -1018,7 +1022,7 @@ void Cop_187(MenuIndex *cell_index)
   if (Player.Money.Cash >= 1200 && Player.Damage > 0)
   {
     int max_meds = (Player.Damage * 1000 + 200 > Player.Money.Cash ? Player.Money.Cash : Player.Damage * 1000);
-    confirm_header = malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
+    confirm_header = (char*)malloc((strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char));
     snprintf(confirm_header,
              (strlen("WILL YOU PAY $50000 FOR A DOCTOR TO SEW YOU UP?") + 1) * sizeof(char),
              "WILL YOU PAY $%i FOR A DOCTOR TO SEW YOU UP?",
@@ -1077,7 +1081,7 @@ void UpdateFreespace(MenuIndex *cell_index)
 
 void Play_Again(MenuIndex *cell_index)
 {
-  confirm_header = malloc((strlen("\nPLAY AGAIN?") + 1) * sizeof(char));
+  confirm_header = (char*)malloc((strlen("\nPLAY AGAIN?") + 1) * sizeof(char));
   strcpy(confirm_header, "\nPLAY AGAIN?");
   Player.MenuNumber = 9;
   p_MenuCallbackContext[0] = &Exit;
@@ -1138,7 +1142,7 @@ static void check_for_saved_game(void)
     if (Player.MenuNumber != 8)
     {
       value = Player.MenuNumber;
-      confirm_header = malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
+      confirm_header = (char*)malloc((strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char));
       snprintf(confirm_header, (strlen("\nLOAD SAVED GAME?") + 1) * sizeof(char), "%s", "\nLOAD SAVED GAME?");
       p_MenuCallbackContext[0] = &Intro;
       p_MenuCallbackContext[1] = &Load_Game;
@@ -1225,6 +1229,12 @@ void window_unload(Window *window)
   gbitmap_destroy(game_icon);
   
   safe_free(p_NumWindowContext);
+  safe_free(number_window_value_text);
+  safe_free(version);
+  safe_free(string);
+  safe_free(format);
+  safe_free(confirm_header);
+  safe_free(strval);
 }
 
 static void destroy_ui(void)
@@ -1272,7 +1282,7 @@ static void create_ui(void)
   text_layer_set_font(number_window_value_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(number_window_value_text_layer, GTextAlignmentCenter);
 
-  number_window_value_text = malloc(10 * sizeof(char));
+  number_window_value_text = (char*)malloc(10 * sizeof(char));
 
   // Create message layer
   message_layer 			= toast_layer_create(window);
@@ -1303,7 +1313,7 @@ static void create_ui(void)
 static void inbox_received_handler(DictionaryIterator *iter, void *context)
 {  
   APP_LOG(APP_LOG_LEVEL_INFO, "Rx: ");
-  for (int i = 0; i < 5; i++)
+  for (int i = 1; i < 4; i++)
   {
     Tuple *new_tuple = dict_find(iter, i);  
   
@@ -1311,12 +1321,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context)
     {
       switch (i)
       {
-        case VERSION:
-        APP_LOG(APP_LOG_LEVEL_INFO, "v%s", new_tuple->value->cstring);
-        version = malloc((strlen(new_tuple->value->cstring) + 1) * sizeof(char));
-        strcpy(version, new_tuple->value->cstring);
-        break;
-    
         case VIBRATE:
         APP_LOG(APP_LOG_LEVEL_INFO, "Vibe:%u", new_tuple->value->uint8);
         ((SETTINGS_DATA*) context)->vibrate = (bool) new_tuple->value->uint8;
@@ -1348,7 +1352,7 @@ void check_version(void)
   app_message_register_inbox_received(inbox_received_handler); 
   app_message_open(128, 128);
   app_message_set_context(&Settings);
-  version = malloc( 5 * sizeof(char));
+  version = (char*)malloc( 5 * sizeof(char));
   snprintf(version, 5 * sizeof(char), "%i.%i", __pbl_app_info.process_version.major, __pbl_app_info.process_version.minor);
    
   return;
@@ -1363,10 +1367,6 @@ int main(void)
   light_enable(Settings.light);
   app_event_loop();
   destroy_ui();
-  safe_free(version);
-  safe_free(string);
-  safe_free(format);
-  safe_free(confirm_header);
   
   return 0;
 }
